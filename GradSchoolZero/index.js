@@ -1,10 +1,8 @@
 const express = require("express");
 const app = express();
 
-// app.use((req, res) => {
-//   console.log("Someone sent a request");
-//   res.send("HELLO WE GOT UR REQUEST");
-// });
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const classes = [
   {
@@ -80,19 +78,49 @@ app.get("/professors", (req, res) => {
 });
 
 app.get("/signin/:username/:password/:type", (req, res) => {
-  users[req.params.type].map((user) => {
-    if (
-      user.username == req.params.username &&
-      user.password == req.params.password
-    ) {
-      res.status(200).send({
-        auth: true,
-      });
-    }
-  });
-  res.status(200).send({
-    auth: false,
-  });
+  const { username } = req.params;
+  const { password } = req.params;
+  const { type } = req.params;
+
+  const user = users[type].find(
+    (user) => user.username == username && user.password == password
+  );
+
+  if (user) {
+    res.status(200).send({
+      auth: true,
+    });
+  } else {
+    res.status(200).send({
+      auth: false,
+    });
+  }
+});
+
+app.post("/signup", (req, res) => {
+  const { username } = req.query;
+  const { password } = req.query;
+  const { type } = req.query;
+
+  const user = users[type].find((user) => user.username == username);
+
+  if (user) {
+    console.log("ERROR USER EXISTS");
+    res.status(200).send({
+      msg: "Error! User Already Exists",
+      auth: false,
+    });
+  } else {
+    users[type].push({
+      username: username,
+      password: password,
+    });
+    console.log("CREATED USER WITH ", req.query);
+    res.status(200).send({
+      msg: "User Created Successfully",
+      auth: true,
+    });
+  }
 });
 
 app.get("/", (req, res) => {
