@@ -1,73 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
+const {DatabaseClient} = require("./Database.js")
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-const classes = [
-  {
-    name: "Theoretical Computer Science",
-    id: "29jjd2120",
-    professorID: "291839",
-  },
-  {
-    name: "Paradigms",
-    id: "29jjd2asda",
-    professorID: "92310",
-  },
-];
-
-const professors = [
-  {
-    name: "Douglas Troeger",
-    professorID: "92310",
-  },
-  {
-    name: "Steph Lucci",
-    professorID: "291839",
-  },
-];
-
-const users = {
-  student: [
-    {
-      username: "John",
-      password: "123456",
-    },
-    {
-      username: "Khuziama",
-      password: "123456",
-    },
-    {
-      username: "Timmy",
-      password: "123456",
-    },
-    {
-      username: "Uzma",
-      password: "123456",
-    },
-  ],
-  professor: [
-    {
-      username: "troeger",
-      password: "123456",
-    },
-    {
-      username: "lucci",
-      password: "123456",
-    },
-    {
-      username: "admin",
-      password: "123456",
-    },
-  ],
-  admin: [
-    {
-      username: "admin",
-      password: "123456",
-    },
-  ],
-};
 
 app.get("/classes", (req, res) => {
   res.status(200).send(classes);
@@ -130,4 +67,6 @@ app.get("/", (req, res) => {
 });
 app.listen(3000, () => {
   console.log("Listening on port 3000");
+  const cli = new DatabaseClient();
+  cli.connect()
 });
