@@ -7,7 +7,7 @@ class DatabaseClient {
 			password: process.env.PASSWORD,
 			host: process.env.HOST,
 			port: 5432,
-			database: 'gradschoolzerodb'
+			database: 'postgres'
 		});
 	}
 
@@ -28,6 +28,7 @@ class DatabaseClient {
 				`
             CREATE TABLE IF NOT EXISTS students (
                 id CHAR(16) NOT NULL PRIMARY KEY,
+                username VARCHAR(64) NOT NULL,
                 firstName VARCHAR(64) NOT NULL,
                 lastName VARCHAR(64) NOT NULL,
                 email VARCHAR(64) NOT NULL,

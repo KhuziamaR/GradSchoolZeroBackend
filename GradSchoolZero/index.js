@@ -1,4 +1,6 @@
 require('dotenv').config();
+const { Pool, Client } = require('pg');
+
 const e = require('express');
 const express = require('express');
 const app = express();
@@ -54,28 +56,47 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/signup', (req, res) => {
+	console.log(req.query);
 	const { username } = req.query;
 	const { password } = req.query;
 	const { type } = req.query;
-
+	const cli = new DatabaseClient();
+	cli.connect();
+	//const text: 'SELECT * FROM user WHERE id = $1',
+	//const values: [1],
 	if (username && password && type) {
-		DatabaseClient.query(`SELECT * FROM ${type} WHERE username = ${username}`, function(error, results, fields) {
-			if (results.length == 0) {
-				const text = `INSERT INTO ${type} (username, password) VALUES ($1, $2) RETURNING id
-  `;
-				const values = [ username, password ];
-				DatabaseClient.query(text, values);
-				res.send({
-					auth: true,
-					msg: 'Sign up successfull'
-				});
-			} else {
-				res.send({
-					auth: false,
-					msg: 'Error signing up, user already exists'
-				});
-			}
-		});
+		// const query = {
+		// 	name: 'fetch-user',
+		// 	text: `SELECT * FROM ${type} WHERE username = ${username}`,
+		// 	values: [ type, username ]
+		// };
+		cli.dbclient
+			.query(`SELECT * FROM ${type} WHERE username = ${username}`)
+			.then((res) => {
+				console.log('result recieved');
+				if (res.length == 0) {
+					const text = `INSERT INTO ${type} (username, password) VALUES (username, password) RETURNING id`;
+					//const values = [ type, username, password ];
+					cli.dbclient
+						.query(text)
+						.then((result2) => {
+							console.log('updated database');
+						})
+						.catch((e) => console.log(e.stack));
+					res.send({
+						auth: true,
+						msg: 'Sign up successfull'
+					});
+				} else {
+					res.send({
+						auth: false,
+						msg: 'Error, User already exists'
+					});
+				}
+			})
+			.catch((e) => {
+				console.log('errorrr', e.stack);
+			});
 	}
 });
 
