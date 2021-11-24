@@ -1,29 +1,31 @@
-const {Client} = require("pg");
+const { Client } = require('pg');
 
 class DatabaseClient {
-    constructor() {
-        this.dbclient = new Client({
-            user: process.env.USERNAME,
-            password: process.env.PASSWORD,
-            host: process.env.HOST,
-            port: 5432,
-            database: "gradschoolzerodb"
-        })
-    }
+	constructor() {
+		this.dbclient = new Client({
+			user: process.env.USERNAME,
+			password: process.env.PASSWORD,
+			host: process.env.HOST,
+			port: 5432,
+			database: 'gradschoolzerodb'
+		});
+	}
 
-    connect(callback = () => {}) {
-        this.dbclient.connect()
-        .then(() => {
-            console.log("Connected to Database Successfully")
-            this.createTables()
-            callback();
-        })
-        .catch(e => console.error(e))
-    }
+	connect(callback = () => {}) {
+		this.dbclient
+			.connect()
+			.then(() => {
+				console.log('Connected to Database Successfully');
+				this.createTables();
+				callback();
+			})
+			.catch((e) => console.error(e));
+	}
 
-    createTables() {
-        this.dbclient.query(
-            `
+	createTables() {
+		this.dbclient
+			.query(
+				`
             CREATE TABLE IF NOT EXISTS students (
                 id CHAR(16) NOT NULL PRIMARY KEY,
                 firstName VARCHAR(64) NOT NULL,
@@ -66,13 +68,12 @@ class DatabaseClient {
                 PRIMARY KEY (studentid, courseid)
             );
             `
-        )
-        .then(results => console.log('Created Tables Successfully'))
-        .catch(e => console.log(e))
-    }
-    
+			)
+			.then((results) => console.log('Created Tables Successfully'))
+			.catch((e) => console.log(e));
+	}
 }
 
 module.exports = {
-    DatabaseClient
-}
+	DatabaseClient
+};
