@@ -26,7 +26,7 @@ class DatabaseClient {
 		this.dbclient
 			.query(
 				`
-            CREATE TABLE IF NOT EXISTS students (
+            CREATE TABLE IF NOT EXISTS student (
                 id CHAR(16) NOT NULL PRIMARY KEY,
                 username VARCHAR(64) NOT NULL,
                 firstName VARCHAR(64) NOT NULL,
@@ -36,7 +36,7 @@ class DatabaseClient {
                 warnings INT NOT NULL
             );
 
-            CREATE TABLE IF NOT EXISTS intructors (
+            CREATE TABLE IF NOT EXISTS intructor (
             id CHAR(16) NOT NULL PRIMARY KEY,
                 firstName VARCHAR(64) NOT NULL,
                 lastName VARCHAR(64) NOT NULL,
@@ -46,7 +46,7 @@ class DatabaseClient {
                 suspended BOOLEAN NOT NULL
             );
 
-            CREATE TABLE IF NOT EXISTS registrars (
+            CREATE TABLE IF NOT EXISTS registrar (
                 id CHAR(16) NOT NULL PRIMARY KEY,
                 email VARCHAR(64) NOT NULL,
                 password VARCHAR(64)
