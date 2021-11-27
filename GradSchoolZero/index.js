@@ -46,6 +46,7 @@ app.post('/login', (req, res) => {
 			fields
 		) {
 			if (results.length > 0) {
+				console.log(results);
 				res.send({
 					auth: true,
 					msg: 'Login Successfull'
@@ -55,7 +56,7 @@ app.post('/login', (req, res) => {
 	}
 });
 
-app.post('/signup', (req, res) => {
+app.post('/signup', (req, resMain) => {
 	console.log(req.query);
 	const { username } = req.query;
 	const { password } = req.query;
@@ -70,25 +71,28 @@ app.post('/signup', (req, res) => {
 		// 	text: `SELECT * FROM ${type} WHERE username = ${username}`,
 		// 	values: [ type, username ]
 		// };
+		//const que = `SELECT * FROM ${type} WHERE username = ${username}`;
+
 		cli.dbclient
-			.query(`SELECT * FROM ${type} WHERE username = ${username}`)
+			.query(`SELECT * FROM ${type}`)
 			.then((res) => {
 				console.log('result recieved');
 				if (res.length == 0) {
-					const text = `INSERT INTO ${type} (username, password) VALUES (username, password) RETURNING id`;
-					//const values = [ type, username, password ];
+					const text = `INSERT INTO ${type} (username, password) VALUES (${username}, ${password});`;
+
 					cli.dbclient
 						.query(text)
 						.then((result2) => {
 							console.log('updated database');
+							resMain.send({
+								auth: true,
+								msg: 'Sign up successfull'
+							});
 						})
 						.catch((e) => console.log(e.stack));
-					res.send({
-						auth: true,
-						msg: 'Sign up successfull'
-					});
 				} else {
-					res.send({
+					console.log(res);
+					resMain.send({
 						auth: false,
 						msg: 'Error, User already exists'
 					});
