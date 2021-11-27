@@ -7,7 +7,7 @@ class DatabaseClient {
 			password: process.env.PASSWORD,
 			host: process.env.HOST,
 			port: 5432,
-			database: 'postgres'
+			database: 'gradschoolzerodb'
 		});
 	}
 
@@ -27,47 +27,78 @@ class DatabaseClient {
 			.query(
 				`
             CREATE TABLE IF NOT EXISTS student (
-                id CHAR(16) NOT NULL PRIMARY KEY,
-                username VARCHAR(64) NOT NULL,
-                firstName VARCHAR(64) NOT NULL,
-                lastName VARCHAR(64) NOT NULL,
-                email VARCHAR(64) NOT NULL,
-                password VARCHAR(64),
-                warnings INT NOT NULL
-            );
+               id CHAR(36) NOT NULL PRIMARY KEY,
+               firstName VARCHAR(64) NOT NULL,
+               lastName VARCHAR(64) NOT NULL,
+               email VARCHAR(64) NOT NULL,
+               password VARCHAR(64),
+               warnings INT NOT NULL,
+	   gpa FLOAT
+           );
 
-            CREATE TABLE IF NOT EXISTS intructor (
-            id CHAR(16) NOT NULL PRIMARY KEY,
-                firstName VARCHAR(64) NOT NULL,
-                lastName VARCHAR(64) NOT NULL,
-                email VARCHAR(64) NOT NULL,
-                password VARCHAR(64),
-                warnings INT NOT NULL,
-                suspended BOOLEAN NOT NULL
-            );
+           CREATE TABLE IF NOT EXISTS instructor (
+               id CHAR(36) NOT NULL PRIMARY KEY,
+               firstName VARCHAR(64) NOT NULL,
+               lastName VARCHAR(64) NOT NULL,
+               email VARCHAR(64) NOT NULL,
+               password VARCHAR(64),
+               warnings INT NOT NULL,
+               suspended BOOLEAN NOT NULL
+           );
 
-            CREATE TABLE IF NOT EXISTS registrar (
-                id CHAR(16) NOT NULL PRIMARY KEY,
-                email VARCHAR(64) NOT NULL,
-                password VARCHAR(64)
-            );
+           CREATE TABLE IF NOT EXISTS registrar (
+               id CHAR(36) NOT NULL PRIMARY KEY,
+               email VARCHAR(64) NOT NULL,
+               password VARCHAR(64)
+           );
 
-            CREATE TABLE IF NOT EXISTS courses (
-                id CHAR(16) NOT NULL PRIMARY KEY,
+           CREATE TABLE IF NOT EXISTS course (
+                id CHAR(36) NOT NULL PRIMARY KEY,
                 name VARCHAR(256) NOT NULL,
                 capacity INT NOT NULL,
                 studentCount INT NOT NULL,
-                instructorid CHAR(16) NOT NULL
-                );
+                instructorid CHAR(36) NOT NULL,
+	            days VARCHAR(7) NOT NULL,  
+	            startTime VARCHAR(4) NOT NULL,
+	            endTime VARCHAR(4) NOT NULL
+               );
 
-            CREATE TABLE IF NOT EXISTS classes (
-                studentid CHAR(16) NOT NULL,
-                courseid CHAR(64) NOT NULL,
-                grade VARCHAR(2),
-                season VARCHAR(8) NOT NULL,
-                year INT NOT NULL,
-                PRIMARY KEY (studentid, courseid)
-            );
+           CREATE TABLE IF NOT EXISTS class (
+               studentid CHAR(36) NOT NULL,
+               courseid CHAR(36) NOT NULL,
+               grade VARCHAR(2),
+               season VARCHAR(8) NOT NULL,
+               year INT NOT NULL,
+               PRIMARY KEY (studentid, courseid)
+           );
+
+
+           CREATE TABLE IF NOT EXISTS studentApplication (
+                id CHAR(36) NOT NULL PRIMARY KEY,
+                firstName VARCHAR(64) NOT NULL,
+                lastName VARCHAR(64) NOT NULL,
+                email VARCHAR(64) NOT NULL,
+	            gpa FLOAT NOT NULL,
+	            program VARCHAR(128) NOT NULL,
+	            graduationYear INT NOT NULL
+           );
+
+
+CREATE TABLE IF NOT EXISTS instructorApplication (
+                id CHAR(36) NOT NULL PRIMARY KEY,
+                firstName VARCHAR(64) NOT NULL,
+                lastName VARCHAR(64) NOT NULL,
+                yearsOfExperience INT NOT NULL,
+	            program VARCHAR(128) NOT NULL,
+	            graduationYear INT NOT NULL,
+                email VARCHAR(64) NOT NULL
+           );
+
+CREATE TABLE IF NOT EXISTS graduationApplication (
+               id CHAR(36) NOT NULL PRIMARY KEY,
+               studentid CHAR(36) NOT NULL
+           );
+
             `
 			)
 			.then((results) => console.log('Created Tables Successfully'))
