@@ -171,20 +171,27 @@ const reviewStudentApplication = (req, res) => {
 };
 
 const createCourse = (req, res) => {
-    const {name, capacity, instructorid, days, starttime, endtime} = req.params;
+    const {name, capacity, instructorid, days, starttime, endtime} = req.query;
 
     const id = uuidv4();
-    req.db.query(`
-    INSERT INTO course (id, name, capacity, studentcount, instructorid, days, starttime, endtime) 
-    VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}, '${days}','${starttime}', '${endtime}' );
-    `)
-    .then(data => {
-        req.status(201).send({msg: "success"});
-    })
-    .catch(error => {
-        console.error(error);
-        req.status(500).send({error: "An error Occurred"});
-    })
+    if (name && capacity && instructorid && days && starttime && endtime) {
+        req.db.query(`
+        INSERT INTO course (id, name, capacity, studentcount, instructorid, days, starttime, endtime) 
+        VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}, '${days}','${starttime}', '${endtime}' );
+        `)
+        .then(data => {
+            req.status(201).send({msg: "success"});
+        })
+        .catch(error => {
+            console.error(error);
+            req.status(500).send({error: "An error Occurred"});
+        })
+    } else {
+        console.log("Need inputs")
+		res.send({
+			msg: 'Please send all inputs'
+		});
+    }
 }
 
 module.exports = {

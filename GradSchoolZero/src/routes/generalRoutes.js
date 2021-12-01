@@ -13,23 +13,37 @@ const courses = (req, res) => {
 
 
 const login =  (req, res) => {
-	const {email, password, type} = req.params;
-
-	if (email & password, type) {
-		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password ='${password}'`)
+	const {email, password, type} = req.query;
+    console.log(req.query)
+	if (email && password && type) {
+		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password ='${password}' OR password = '';
+                      SELECT * FROM semesterPeriod;
+        `)
 		.then(data => {
-			if (data.rowCount == 1) {
-				res.status(200).send({auth: "true"});
-			} else {
-				res.status(401).send({auth: "false"});
-			}
+            period = data[1].rows[0].period;
+            if (data[0].rowCount === 1) {
+                if (data[0].rows[0].password == "") {
+                    req.db.query(`UPDATE ${type} SET password = '${password}' WHERE id = '${data[0].rows[0].id}'`)
+                    .then(data => {
+                        res.status(200).send({auth: "true", period});
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        res.status(500).send({error: "An Error Occurred"});
+                    })
+                } else {
+                    res.status(200).send({auth: "true", period});
+                }
+            } else {
+                res.status(401).send({auth: "false"});
+            }
 		})
 		.catch(err => {
 			console.error(err);
 			res.status(500).send({error: "An Error Occurred"});
 		})
 	} else {
-		req.status(500).send({msg: "Error, Send all required Fields"});
+		res.status(500).send({msg: "Error, Send all required Fields"});
 	}
 };
 
