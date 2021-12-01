@@ -33,7 +33,7 @@ class DatabaseClient {
                email VARCHAR(64) NOT NULL,
                password VARCHAR(64),
                warnings INT NOT NULL,
-	   gpa FLOAT
+	           gpa FLOAT
            );
 
            CREATE TABLE IF NOT EXISTS instructor (
@@ -58,7 +58,7 @@ class DatabaseClient {
                 capacity INT NOT NULL,
                 studentCount INT NOT NULL,
                 instructorid CHAR(36) NOT NULL,
-	            days VARCHAR(7) NOT NULL,  
+	            days VARCHAR(7) NOT NULL,
 	            startTime VARCHAR(4) NOT NULL,
 	            endTime VARCHAR(4) NOT NULL
                );
