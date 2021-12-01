@@ -1,9 +1,5 @@
-const { DatabaseClient } = require('../Database');
 const { v4: uuidv4 } = require('uuid');
 const { createTransport } = require('nodemailer');
-
-const cli = new DatabaseClient();
-cli.connect();
 
 const transporter = createTransport({
 	host: 'smtp.gmail.com',
@@ -20,13 +16,13 @@ const reviewInstructorApplication = (req, res) => {
 
 	if (decision == '0') {
 		const applicationQuery = `SELECT * FROM instructorApplication WHERE id = '${id}';  `;
-		cli.dbclient
+		req.db
 			.query(applicationQuery)
 			.then((result) => {
 				var instructorApp = result.rows[0];
 				console.log(instructorApp);
 				const varQuery = `SELECT * FROM instructor WHERE email = '${instructorApp.email}'`;
-				cli.dbclient
+				req.db
 					.query(varQuery)
 					.then((data) => {
 						if (data.rowCount > 0) {
@@ -58,7 +54,7 @@ const reviewInstructorApplication = (req, res) => {
 							*/
 
 							const createInstructorQuery = `INSERT INTO instructor (id, firstName, lastName, email , password, warnings, suspended) VALUES ('${uuidv4()}', '${instructorApp.firstname}','${instructorApp.lastname}', '${instructorApp.email}','',0, ${false});`;
-							cli.dbclient
+							req.db
 								.query(createInstructorQuery)
 								.then((result) => {
 									res.status(200).send({
@@ -67,7 +63,7 @@ const reviewInstructorApplication = (req, res) => {
 								})
 								.finally(() => {
 									const deleteApplicationQuery = `DELETE FROM instructorApplication WHERE id = '${id}'`;
-									cli.dbclient
+									req.db
 										.query(deleteApplicationQuery)
 										.then((res) => {
 											console.log('Successfully deleted instructor application');
@@ -99,13 +95,13 @@ const reviewStudentApplication = (req, res) => {
 
 	if (decision == '0') {
 		const applicationQuery = `SELECT * FROM studentApplication WHERE id = '${id}';  `;
-		cli.dbclient
+		req.db
 			.query(applicationQuery)
 			.then((result) => {
 				var studentApp = result.rows[0];
 				console.log(studentApp);
 				const varQuery = `SELECT * FROM student WHERE email = '${studentApp.email}'`;
-				cli.dbclient
+				req.db
 					.query(varQuery)
 					.then((data) => {
 						if (data.rowCount > 0) {
@@ -138,7 +134,7 @@ const reviewStudentApplication = (req, res) => {
 							//  `INSERT INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
 
 							const createStudentQuery = `INSERT INTO student (id, firstName, lastName, email, password, warnings, gpa) VALUES ('${uuidv4()}', '${studentApp.firstname}','${studentApp.lastname}', '${studentApp.email}','',0, 4.0);`;
-							cli.dbclient
+							req.db
 								.query(createStudentQuery)
 								.then((result) => {
 									res.status(200).send({
@@ -147,7 +143,7 @@ const reviewStudentApplication = (req, res) => {
 								})
 								.finally(() => {
 									const deleteApplicationQuery = `DELETE FROM studentApplication WHERE id = '${id}'`;
-									cli.dbclient
+									req.db
 										.query(deleteApplicationQuery)
 										.then((res) => {
 											console.log('Successfully deleted student application');
@@ -174,7 +170,25 @@ const reviewStudentApplication = (req, res) => {
 	}
 };
 
+const createCourse = (req, res) => {
+    const {name, capacity, instructorid, days, starttime, endtime} = req.params;
+
+    const id = uuidv4();
+    req.db.query(`
+    INSERT INTO course (id, name, capacity, studentcount, instructorid, days, starttime, endtime) 
+    VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}, '${days}','${starttime}', '${endtime}' );
+    `)
+    .then(data => {
+        req.status(201).send({msg: "success"});
+    })
+    .catch(error => {
+        console.error(error);
+        req.status(500).send({error: "An error Occurred"});
+    })
+}
+
 module.exports = {
     reviewInstructorApplication,
-    reviewStudentApplication
+    reviewStudentApplication,
+    createCourse
 }

@@ -1,11 +1,7 @@
-const { DatabaseClient } = require('../Database');
 const { v4: uuidv4 } = require('uuid');
 
-const cli = new DatabaseClient();
-cli.connect();
-
 const courses = (req, res) => {
-	cli.dbclient.query("SELECT * FROM course;")
+	req.db.query("SELECT * FROM course;")
 	.then(data => {
 		res.status(200).send(data.rows);
 	})
@@ -20,7 +16,7 @@ const login =  (req, res) => {
 	const {email, password, type} = req.params;
 
 	if (email & password, type) {
-		cli.dbclient.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password ='${password}'`)
+		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password ='${password}'`)
 		.then(data => {
 			if (data.rowCount == 1) {
 				res.status(200).send({auth: "true"});
@@ -48,7 +44,7 @@ const signupInstructorApplication = (req, res) => {
 	const id = uuidv4();
 	const { firstName, lastName, yearsOfExperience, program, graduationYear, email } = req.query;
 	if (firstName && lastName && email && yearsOfExperience && program && graduationYear) {
-		cli.dbclient
+		req.db
 			.query(`SELECT * FROM instructorApplication WHERE email = '${email}'`)
 			.then((data) => {
 				if (data.rows.length > 0) {
@@ -56,7 +52,7 @@ const signupInstructorApplication = (req, res) => {
 						msg: 'User has already applied for instructorApp'
 					});
 				} else {
-					const insertQuery = `INSERT INTO instructorApplication (id, firstName, lastName, yearsOfExperience, program, graduationYear, email) VALUES ('${id}', '${firstName}','${lastName}', ${yearsOfExperience},${program}, ${graduationYear},'${email}');`;
+					const insertQuery = `INSERT INTO instructorApplication (id, firstName, lastName, yearsOfExperience, program, graduationYear, email) VALUES ('${id}', '${firstName}','${lastName}', ${yearsOfExperience},'${program}', ${graduationYear},'${email}');`;
 					cli.dbclient
 						.query(insertQuery)
 						.then((success) => {
@@ -94,11 +90,10 @@ const signupStudentApplication = (req, res) => {
 	//             gpa FLOAT NOT NULL,
 	//             program VARCHAR(128) NOT NULL,
 	//             graduationYear INT NOT NULL
-	console.log(req.params)
 	const id = uuidv4();
 	const { firstName, lastName, email, gpa, program, graduationYear } = req.query;
 	if (firstName && lastName && email && gpa && program && graduationYear) {
-		cli.dbclient
+		req.db
 			.query(`SELECT * FROM studentApplication WHERE email = '${email}'`)
 			.then((data) => {
 				if (data.rows.length > 0) {
@@ -108,7 +103,7 @@ const signupStudentApplication = (req, res) => {
 				} else {
 					const insertQuery = `INSERT INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
 					console.log("Inserting")
-					cli.dbclient
+					req.db
 						.query(insertQuery)
 						.then((success) => {
 							console.log("StudentApplication")

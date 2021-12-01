@@ -84,7 +84,7 @@ class DatabaseClient {
            );
 
 
-CREATE TABLE IF NOT EXISTS instructorApplication (
+            CREATE TABLE IF NOT EXISTS instructorApplication (
                 id CHAR(36) NOT NULL PRIMARY KEY,
                 firstName VARCHAR(64) NOT NULL,
                 lastName VARCHAR(64) NOT NULL,
@@ -94,10 +94,19 @@ CREATE TABLE IF NOT EXISTS instructorApplication (
                 email VARCHAR(64) NOT NULL
            );
 
-CREATE TABLE IF NOT EXISTS graduationApplication (
+            CREATE TABLE IF NOT EXISTS graduationApplication (
                id CHAR(36) NOT NULL PRIMARY KEY,
                studentid CHAR(36) NOT NULL
            );
+
+           CREATE TABLE IF NOT EXISTS semesterPeriod (
+                period VARCHAR(128) NOT NULL
+            );
+
+            
+            INSERT INTO semesterPeriod (period) 
+            SELECT 'pre-registration'
+            WHERE NOT EXISTS (SELECT * FROM semesterPeriod);
 
             `
 			)
