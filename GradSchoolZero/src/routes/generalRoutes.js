@@ -23,7 +23,7 @@ const login =  (req, res) => {
             if (data[0].rowCount === 1) {
                 if (data[0].rows[0].password == "") {
                     req.db.query(`UPDATE ${type} SET password = '${password}' WHERE id = '${data[0].rows[0].id}'`)
-                    .then(data => {
+                    .then(_ => {
                         res.status(200).send({auth: "true", period, id: data[0].rows[0].id});
                     })
                     .catch(err => {

@@ -6,7 +6,7 @@ const express = require('express');
 const app = express();
 const {courses, login, signupInstructorApplication, signupStudentApplication} = require("./src/routes/generalRoutes");
 const {reviewInstructorApplication, reviewStudentApplication, createCourse} = require("./src/routes/registrarRoutes");
-
+const {student} = require("./src/routes/studentRoutes");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
@@ -19,6 +19,9 @@ app.get('/courses', courses);
 app.post('/login', login);
 app.post('/signupInstructorApplication', signupInstructorApplication);
 app.post('/signupStudentApplication', signupStudentApplication);
+
+// Student Routes
+app.get("/student", student);
 
 //Registrar Routes
 app.post('/reviewStudentApplication', reviewStudentApplication);
