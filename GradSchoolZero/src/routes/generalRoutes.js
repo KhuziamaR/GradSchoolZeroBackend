@@ -15,7 +15,7 @@ const courses = (req, res) => {
 const login =  (req, res) => {
 	const {email, password, type} = req.query;
 	if (email && password && type) {
-		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password ='${password}' OR password = '';
+		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password = '${password}' OR password = '';
                       SELECT * FROM semesterPeriod;
         `)
 		.then(data => {

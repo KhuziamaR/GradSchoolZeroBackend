@@ -172,15 +172,26 @@ const reviewStudentApplication = (req, res) => {
 
 const createCourse = (req, res) => {
     const {name, capacity, instructorid, days, startTime, endTime} = req.query;
-	console.log(req.query)
     const id = uuidv4();
     if (name && capacity && instructorid && days && startTime && endTime) {
         req.db.query(`
-        INSERT INTO course (id, name, capacity, studentcount, instructorid, days, starttime, endtime) 
-        VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${days}','${startTime}', '${endTime}' );
+		SELECT * FROM instructor WHERE id = '${instructorid}';
         `)
         .then(data => {
-            res.status(201).send({msg: "success"});
+			if (data.rowCount == 1) {
+				const instructorName = data.rows[0].firstname + " " + data.rows[0].lastname;
+				req.db.query(`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime) 
+							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}' );`)
+				.then(_ => {
+					res.status(200).send({msg: "Success!"});
+				})
+				.catch(error => {
+					console.error(error);
+					res.status(500).send({error: "An error Occurred"});
+				})
+			} else {
+				res.status(404).send({error: "Instructor Not Found"});
+			}
         })
         .catch(error => {
             console.error(error);

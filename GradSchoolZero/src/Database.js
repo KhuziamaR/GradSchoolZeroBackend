@@ -58,6 +58,7 @@ class DatabaseClient {
                 capacity INT NOT NULL,
                 studentCount INT NOT NULL,
                 instructorid CHAR(36) NOT NULL,
+                instructorName VARCHAR(256) NOT NULL,
 	            days VARCHAR(7) NOT NULL,
 	            startTime VARCHAR(4) NOT NULL,
 	            endTime VARCHAR(4) NOT NULL
@@ -113,6 +114,19 @@ class DatabaseClient {
 			.then((results) => console.log('Created Tables Successfully'))
 			.catch((e) => console.log(e));
 	}
+
+    resetTables(tables) {
+        const query = (table) => `DROP TABLE ${table};\n`;
+        const queries = (result, tablelst) => {
+            if (tablelst.length == 0) return result;
+            return queries(result + query(tablelst[0]), tablelst.slice(1,tablelst.length));
+        }
+        this.dbclient.query(queries("", tables))
+        .then(_ => console.log("Successfully Deleted tables: "+ tables))
+        .catch(error => {
+            console.log(error);
+        })
+    }
 }
 
 module.exports = {
