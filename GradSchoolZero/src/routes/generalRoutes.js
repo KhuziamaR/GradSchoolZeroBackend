@@ -66,7 +66,7 @@ const signupInstructorApplication = (req, res) => {
 					});
 				} else {
 					const insertQuery = `INSERT INTO instructorApplication (id, firstName, lastName, yearsOfExperience, program, graduationYear, email) VALUES ('${id}', '${firstName}','${lastName}', ${yearsOfExperience},'${program}', ${graduationYear},'${email}');`;
-					cli.dbclient
+					req.db
 						.query(insertQuery)
 						.then((success) => {
 							res.status(200).send({
@@ -74,7 +74,7 @@ const signupInstructorApplication = (req, res) => {
 							});
 						})
 						.catch((error) => {
-							console.log('Error when inserting into intructor applicaiton', error);
+							console.log('Error when inserting into intructor application', error);
 							res.status(500).send({
 								msg: 'error'
 							});
@@ -82,7 +82,7 @@ const signupInstructorApplication = (req, res) => {
 				}
 			})
 			.catch((error) => {
-				console.log('Error when inserting into instructor applicaiton');
+				console.log('Error when inserting into instructor applicaiton', error);
 				res.status(500).send({
 					msg: 'error'
 				});
