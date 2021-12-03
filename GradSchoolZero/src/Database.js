@@ -100,6 +100,12 @@ class DatabaseClient {
                studentid CHAR(36) NOT NULL
            );
 
+           CREATE TABLE IF NOT EXISTS waitlist (
+               id CHAR(36) NOT NULL PRIMARY KEY,
+               courseid CHAR(36) NOT NULL,
+               studentid CHAR(36) NOT NULL
+           );
+
            CREATE TABLE IF NOT EXISTS semesterPeriod (
                 period VARCHAR(128) NOT NULL
             );
