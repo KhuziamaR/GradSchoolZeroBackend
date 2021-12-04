@@ -40,7 +40,7 @@ const availableCourses = (req, res) => {
     if (!studentid) return res.status(500).send({msg: "Send all required inputs."});
     req.db.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND grade = '';`)
     .then(data => {
-        const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildNOTOrCourseList("", data.rows) ) + ";";
+        const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE NOT (" + buildOrCourseList("", data.rows) + ")") + ";";
         req.db.query(classesQuery)
         .then(data2 => {
             res.status(200).send({courses: data2.rows});
@@ -135,10 +135,10 @@ const enroll = (req, res) => {
         }
 
         //Check if time conflicts exist;
-        const coursesIDListSQL = buildOrCourseList("", enrolledClasses);
-        req.db.query(`SELECT * FROM course WHERE ${coursesIDListSQL};`)
+        const coursesIDListSQL = enrolledClasses.length == 0 ? "" : " WHERE " + buildOrCourseList("", enrolledClasses);
+        req.db.query(`SELECT * FROM course${coursesIDListSQL};`)
         .then(data2 => {
-            if (addNewClassConflict(course, data2.rows)) {
+            if (addNewClassConflict(course, data2.rows) && !(enrolledClasses.length == 0)) {
                 return res.status(401).send({msg: "There exists a time conflict with students enrolled courses and the attempted course."})
             }
             const date = new Date();
@@ -220,12 +220,6 @@ const buildOrCourseList = (result, classes) => {
     if (classes.length == 0) return result;
     if (classes.length == 1) return result + `id = '${classes[0].courseid}'`;
     return buildOrCourseList(result + `id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
-}
-
-const buildNOTOrCourseList = (result, classes) => {
-    if (classes.length == 0) return result;
-    if (classes.length == 1) return result + `NOT id = '${classes[0].courseid}'`;
-    return buildOrCourseList(result + `NOT id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
 }
 
 module.exports = {
