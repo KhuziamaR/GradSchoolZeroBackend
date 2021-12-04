@@ -43,7 +43,7 @@ const availableCourses = (req, res) => {
         const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildNOTOrCourseList("", data.rows) ) + ";";
         req.db.query(classesQuery)
         .then(data2 => {
-            res.status(200).send(data2.rows);
+            res.status(200).send({courses: data2.rows});
         })
         .catch(error => {
             console.log(error);
@@ -62,7 +62,7 @@ const enrolledCourses = (req, res) => {
         const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildOrCourseList("", data.rows) ) + ";";
         req.db.query(classesQuery)
         .then(data => {
-            return res.status(200).send(data.rows);
+            return res.status(200).send({courses: data.rows});
         })
         .catch(error => {
             console.log(error);
@@ -82,19 +82,9 @@ const completedCourses = (req, res) => {
         req.db.query(classesQuery)
         .then(data2 => {
             const classes = data.rows.map((val, index) => {
-                return {...val, course: data2.rows[index] ? {
-                    id: data2.rows[index].id,
-                    name: data2.rows[index].name,
-                    capacity: data2.rows[index].capacity,
-                    studentCount: data2.rows[index].studentCount,
-                    instructorid: data2.rows[index].instructorid,
-                    instructorname: data2.rows[index].instructorname,
-                    days: data2.rows[index].days,
-                    starttime: data2.rows[index].starttime,
-                    endtime: data2.rows[index].endtime
-                } : {}};
+                return {...val, course: data2.rows[index] ? {...data2.rows[index]} : {}};
             })
-            res.status(200).send(classes);
+            res.status(200).send({classes});
         })
         .catch(error => {
             console.log(error);
