@@ -61,7 +61,8 @@ class DatabaseClient {
                 instructorName VARCHAR(256) NOT NULL,
 	            days VARCHAR(7) NOT NULL,
 	            startTime VARCHAR(4) NOT NULL,
-	            endTime VARCHAR(4) NOT NULL
+	            endTime VARCHAR(4) NOT NULL,
+                active BOOLEAN NOT NULL
                );
 
            CREATE TABLE IF NOT EXISTS class (

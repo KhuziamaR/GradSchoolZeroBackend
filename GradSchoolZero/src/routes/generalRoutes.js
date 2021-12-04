@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 
 const courses = (req, res) => {
-	req.db.query("SELECT * FROM course;")
+	req.db.query("SELECT * FROM course WHERE active = true")
 	.then(data => {
 		res.status(200).send(data.rows);
 	})

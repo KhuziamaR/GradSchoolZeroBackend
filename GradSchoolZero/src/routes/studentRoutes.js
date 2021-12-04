@@ -24,15 +24,84 @@ const student = (req, res) => {
     
 }
 
+const availableCourses = (req, res) => {
+    const {studentid} = req.query;
+    if (!studentid) return res.status(500).send({msg: "Send all required inputs."});
+    req.db.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND grade = '';`)
+    .then(data => {
+        const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildNOTOrCourseList("", data.rows) ) + ";";
+        req.db.query(classesQuery)
+        .then(data2 => {
+            res.status(200).send(data2.rows);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({msg: "An error occurred."});
+        })
+    })
+}
+
+const enrolledCourses = (req, res) => {
+    // Get a list of courses that the student is currently enrolled in
+    const {studentid} = req.query
+    if (!studentid) return res.status(500).send({msg: "Send all required inputs."});
+    const year = (new Date()).getFullYear();
+    req.db.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND year = ${year} AND season = '${getSeason()}';`)
+    .then(data => {
+        const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildOrCourseList("", data.rows) ) + ";";
+        req.db.query(classesQuery)
+        .then(data => {
+            return res.status(200).send(data.rows);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({msg: "An error occurred."});
+        })
+    })
+
+
+}
+
+const completedCourses = (req, res) => {
+    const {studentid} = req.query;
+    if (!studentid) return res.status(500).send({msg: "Send all required inputs."});
+    req.db.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND NOT grade = '';`)
+    .then(data => {
+        const classesQuery =`SELECT * FROM course` + ( data.rowCount == 0 ? "" : " WHERE " + buildOrCourseList("", data.rows) ) + ";";
+        req.db.query(classesQuery)
+        .then(data2 => {
+            const classes = data.rows.map((val, index) => {
+                return {...val, course: data2.rows[index] ? {
+                    id: data2.rows[index].id,
+                    name: data2.rows[index].name,
+                    capacity: data2.rows[index].capacity,
+                    studentCount: data2.rows[index].studentCount,
+                    instructorid: data2.rows[index].instructorid,
+                    instructorname: data2.rows[index].instructorname,
+                    days: data2.rows[index].days,
+                    starttime: data2.rows[index].starttime,
+                    endtime: data2.rows[index].endtime
+                } : {}};
+            })
+            res.status(200).send(classes);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({msg: "An error occurred."});
+        })
+    })
+}
+
 const enroll = (req, res) => {
     const {courseid, studentid} = req.query;
     // Check if they're already enrolled
     // Check if they have 4 classes
     // Check if any time conflicts exist
     // Check if course is full
+    if (!courseid && !studentid) return res.status(500).send({msg: "Send all required inputs."});
     req.db.query(`
         SELECT * FROM course WHERE id = '${courseid}';
-        SELECT * FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';
+        SELECT * FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid} AND grade = ''';
         SELECT * FROM class WHERE studentid = '${studentid}';
         SELECT * FROM student WHERE id = '${studentid}';
     `)
@@ -162,11 +231,20 @@ const conflicts = (days1, starttime1, endtime1, days2, starttime2, endtime2) => 
 
 const buildOrCourseList = (result, classes) => {
     if (classes.length == 0) return result;
-    if (classes.length == 1) return result + `id = ${classes[0].courseid}`;
+    if (classes.length == 1) return result + `id = '${classes[0].courseid}'`;
     return buildOrCourseList(result + `id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
+}
+
+const buildNOTOrCourseList = (result, classes) => {
+    if (classes.length == 0) return result;
+    if (classes.length == 1) return result + `NOT id = '${classes[0].courseid}'`;
+    return buildOrCourseList(result + `NOT id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
 }
 
 module.exports = {
     student,
-    enroll
+    enroll,
+    enrolledCourses,
+    completedCourses,
+    availableCourses
 }

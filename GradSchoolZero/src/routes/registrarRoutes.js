@@ -180,8 +180,8 @@ const createCourse = (req, res) => {
         .then(data => {
 			if (data.rowCount == 1) {
 				const instructorName = data.rows[0].firstname + " " + data.rows[0].lastname;
-				req.db.query(`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime) 
-							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}' );`)
+				req.db.query(`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime, active) 
+							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}', false );`)
 				.then(_ => {
 					res.status(200).send({msg: "Success!"});
 				})
