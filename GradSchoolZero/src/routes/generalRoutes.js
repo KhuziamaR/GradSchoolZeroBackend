@@ -14,12 +14,15 @@ const courses = (req, res) => {
 
 const login =  (req, res) => {
 	const {email, password, type} = req.query;
+	console.log(req.query)
 	if (email && password && type) {
-		req.db.query(`SELECT * FROM ${type} WHERE email = '${email}' AND password = '${password}' OR password = '';
+		console.log(`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');`);
+		req.db.query(`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');
                       SELECT * FROM semesterPeriod;
         `)
 		.then(data => {
             period = data[1].rows[0].period;
+			console.log(data)
             if (data[0].rowCount === 1) {
                 if (data[0].rows[0].password == "") {
                     req.db.query(`UPDATE ${type} SET password = '${password}' WHERE id = '${data[0].rows[0].id}'`)

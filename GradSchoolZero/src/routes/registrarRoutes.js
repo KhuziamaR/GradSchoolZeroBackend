@@ -37,7 +37,7 @@ const reviewInstructorApplication = (req, res) => {
 									from: '"GradSchoolZero" <gradschoolzeroemailer@gmail.com>',
 									to: `${instructorApp.email}`,
 									subject: 'Acceptance Letter Gradschoolzero',
-									text: `Congratulations, your instructor applicaiton was reviewed by the registrar and was approved! You have been accepted!\nPlease use your email as your username and the first password you input will be your new password. \nUsername: ${instructorApp.email}`
+									text: `Congratulations, your instructor application was reviewed by the registrar and was approved! You have been accepted!\nPlease use your email as your username and the first password you input will be your new password. \nUsername: ${instructorApp.email}`
 								})
 								.then((info) => {
 									console.log(info);
@@ -45,12 +45,12 @@ const reviewInstructorApplication = (req, res) => {
 								.catch(console.log);
 							/*
 							id CHAR(36) NOT NULL PRIMARY KEY,
-               firstName VARCHAR(64) NOT NULL,
-               lastName VARCHAR(64) NOT NULL,
-               email VARCHAR(64) NOT NULL,
-               password VARCHAR(64),
-               warnings INT NOT NULL,
-               suspended BOOLEAN NOT NULL
+							firstName VARCHAR(64) NOT NULL,
+							lastName VARCHAR(64) NOT NULL,
+							email VARCHAR(64) NOT NULL,
+							password VARCHAR(64),
+							warnings INT NOT NULL,
+							suspended BOOLEAN NOT NULL
 							*/
 
 							const createInstructorQuery = `INSERT INTO instructor (id, firstName, lastName, email , password, warnings, suspended) VALUES ('${uuidv4()}', '${instructorApp.firstname}','${instructorApp.lastname}', '${instructorApp.email}','',0, ${false});`;
@@ -116,7 +116,7 @@ const reviewStudentApplication = (req, res) => {
 									from: '"GradSchoolZero" <gradschoolzeroemailer@gmail.com>',
 									to: `${studentApp.email}`,
 									subject: 'Acceptance Letter Gradschoolzero',
-									text: `Congratulations, your student applicaiton was reviewed by the registrar and was approved! You have been accepted!\nPlease use your email as your username and the first password you input will be your new password. \nUsername: ${studentApp.email}`
+									text: `Congratulations, your student application was reviewed by the registrar and was approved! You have been accepted!\nPlease use your email as your username and the first password you input will be your new password. \nUsername: ${studentApp.email}`
 								})
 								.then((info) => {
 									console.log(info);
@@ -181,7 +181,7 @@ const createCourse = (req, res) => {
 			if (data.rowCount == 1) {
 				const instructorName = data.rows[0].firstname + " " + data.rows[0].lastname;
 				req.db.query(`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime, active) 
-							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}', false );`)
+							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}', true );`)
 				.then(_ => {
 					res.status(200).send({msg: "Success!"});
 				})

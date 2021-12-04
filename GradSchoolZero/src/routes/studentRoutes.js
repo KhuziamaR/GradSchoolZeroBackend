@@ -112,90 +112,61 @@ const enroll = (req, res) => {
     if (!courseid && !studentid) return res.status(500).send({msg: "Send all required inputs."});
     req.db.query(`
         SELECT * FROM course WHERE id = '${courseid}';
-        SELECT * FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid} AND grade = ''';
-        SELECT * FROM class WHERE studentid = '${studentid}';
+        SELECT * FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';
+        SELECT * FROM class WHERE studentid = '${studentid}' AND grade = '';
         SELECT * FROM student WHERE id = '${studentid}';
     `)
     .then(data => {
-        if (data[1].rowCount > 0) {
+        // student enrolled already
+        console.log(data);
+        const course = data[0].rows[0];
+        const alreadyEnrolled = data[1].rowCount == 1;
+        const enrolledClasses = data[2].rows;
+        const student = data[3].rows[0];
+        // Student is enrolled already
+        if (alreadyEnrolled) {
             return res.status(409).send({msg: "Student already enrolled"})
         }
-        if (data[2].rowCount == 4) {
+        // Student has max classes
+        if (enrolledClasses.length == 4) {
             return res.status(409).send({msg: "Student is already registerd in 4 classes."})
         }
-        if (data[1].rowCount == 0) {
-            if (data[0].rows[0].studentCount == data[0].rows[0].capacity) {
-                req.db.query(`INSERT INTO waitlist (id, studentid, courseid) VALUES ('${uuidv4()}','${studentid}','${courseid}');`)
-                .then(_ => {
-                    return res.status(409).send({msg: "Class was full, Student Waitlisted."})
-                })
-                .catch(error => {
-                    console.log("Error inserting into waitlist", error);
-                    res.status(500).send({msg: "An Error Occurred"});
-                })
-            } else {
-                // Class can be added to student schedule
-                const date = new Date();
-                const addClassQuery = `INSERT INTO class (studentid, courseid, grade, season, year) VALUES ('${studentid}','${courseid}','','${getSeason()}',${date.getFullYear()});
-                                       UPDATE course SET studentCount = ${data[0].rows[0].studentcount + 1} WHERE id = '${courseid}';`
-                req.db.query(addClassQuery)
-                .then(_ => {
-                    res.status(200).send({msg: "Success!"});
-                })
-                .catch(error => {
-                    console.log("Error inserting class: ",error);
-                    res.status(500).send({msg: "An Error Occurred"});
-                })
-            }
-        } else {
-            // Check for time conflicts
-            const coursesIDListSQL = buildOrCourseList("", data[1].rows);
-            req.db.query(`SELECT * FROM course WHERE ${coursesIDListSQL};`)
-            .then(data => {
-                courses = data.rows;
-                const courseToBeRegistered = data[0].rows[0];
-    
-                for (let i = 0; i < courses.length; i++) {
-                    if (conflicts(courseToBeRegistered.days,
-                                    courseToBeRegistered.starttime,
-                                    courseToBeRegistered.endtime,
-                                    courses[i].days,
-                                    course[i].starttime,
-                                    courses[i].endtime)) {
-                                        return res.status(409).send({msg: "There is a time Conflict"});
-                                    }
-                }
-                // At this point there are no conflicts check if class is full
-                if (data[0].rows[0].studentCount == data[0].rows[0].capacity) {
-                    req.db.query(`INSERT INTO waitlist (id, studentid, courseid) VALUES ('${uuidv4()}','${studentid}','${courseid}');`)
-                    .then(_ => {
-                        return res.status(409).send({msg: "Class was full, Student Waitlisted."})
-                    })
-                    .catch(error => {
-                        console.log("Error inserting into waitlist", error);
-                        res.status(500).send({msg: "An Error Occurred"});
-                    })
-                } else {
-                    // Class can be added to student schedule
-                    const date = new Date();
-                    const addClassQuery = `INSERT INTO class (studentid, courseid, grade, season, year) VALUES ('${studentid}','${courseid}','','${getSeason()}',${date.getFullYear()});
-                                           UPDATE course SET studentCount = ${data[0].rows[0].studentcount + 1} WHERE id = '${courseid}';`
-                    req.db.query(addClassQuery)
-                    .then(_ => {
-                        res.status(200).send({msg: "Success!"});
-                    })
-                    .catch(error => {
-                        console.log("Error inserting class: ",error);
-                        res.status(500).send({msg: "An Error Occurred"});
-                    })
-                }
-    
+        // Class is at max capacity
+        if (course.studentCount == course.capacity) {
+            req.db.query(`INSERT INTO waitlist (id, studentid, courseid) VALUES ('${uuidv4()}','${studentid}','${courseid}');`)
+            .then(_ => {
+                return res.status(409).send({msg: "Class was full, Student Waitlisted."})
             })
             .catch(error => {
-                console.log("Error getting students enrolled courses: ", error);
+                console.log("Error inserting into waitlist", error);
                 res.status(500).send({msg: "An Error Occurred"});
             })
+            return;
         }
+
+        //Check if time conflicts exist;
+        const coursesIDListSQL = buildOrCourseList("", enrolledClasses);
+        req.db.query(`SELECT * FROM course WHERE ${coursesIDListSQL};`)
+        .then(data2 => {
+            if (addNewClassConflict(course, data2.rows)) {
+                return res.status(401).send({msg: "There exists a time conflict with students enrolled courses and the attempted course."})
+            }
+            const date = new Date();
+            const addClassQuery = `INSERT INTO class (studentid, courseid, grade, season, year) VALUES ('${studentid}','${courseid}','','${getSeason()}',${date.getFullYear()});
+                                    UPDATE course SET studentCount = ${course.studentcount + 1} WHERE id = '${courseid}';`
+            req.db.query(addClassQuery)
+            .then(_ => {
+                res.status(200).send({msg: "Success!"});
+            })
+            .catch(error => {
+                console.log("Error inserting class: ",error);
+                res.status(500).send({msg: "An Error Occurred"});
+            })
+        })
+        .catch(error => {
+            console.log("Error getting students enrolled courses: ", error);
+            res.status(500).send({msg: "An Error Occurred"});
+        })
         
     })
     .catch(error => {
@@ -234,10 +205,25 @@ const conflicts = (days1, starttime1, endtime1, days2, starttime2, endtime2) => 
         return false;
     }
     const timeConflicts = (start1, end1, start2, end2) => {
-        return Math.max(start1, start2) < Math.min(end1, end2);
+        return Math.max(start1, start2) < Math.min(end1, end2) || (start1 == start2) || (endtime1 == endtime2);
     }
 
     return dayConflicts(days1, days2) && timeConflicts(starttimeOverall1, endtimeOverall1, starttimeOverall2, endtimeOverall2);
+}
+
+const addNewClassConflict = (newCourse, enrolledCourses) => {
+    if (enrolledCourses.length == 0) return false;
+    for (let i = 0; i < enrolledCourses.length; i++) {
+        if (conflicts(newCourse.days,
+                        newCourse.starttime,
+                        newCourse.endtime,
+                        enrolledCourses[i].days,
+                        enrolledCourses[i].starttime,
+                        enrolledCourses[i].endtime)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 const buildOrCourseList = (result, classes) => {
