@@ -7,6 +7,7 @@ const app = express();
 const {courses, login, signupInstructorApplication, signupStudentApplication} = require("./src/routes/generalRoutes");
 const {reviewInstructorApplication, reviewStudentApplication, createCourse} = require("./src/routes/registrarRoutes");
 const {student, students, enroll, enrolledCourses, completedCourses, availableCourses} = require("./src/routes/studentRoutes");
+const {assignGrade} = require('./src/routes/instructorRoutes');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -33,6 +34,9 @@ app.get("/availableCourses", availableCourses);
 app.post('/reviewStudentApplication', reviewStudentApplication);
 app.post('/reviewInstructorApplication', reviewInstructorApplication);
 app.post('/createCourse', createCourse);
+
+//Instructor Routes
+app.post("/assignGrade", assignGrade);
 
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');

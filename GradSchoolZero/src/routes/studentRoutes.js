@@ -1,4 +1,3 @@
-const MimeNode = require('nodemailer/lib/mime-node');
 const { v4: uuidv4 } = require('uuid');
 
 const students = (req, res) => {
@@ -51,6 +50,7 @@ const availableCourses = (req, res) => {
         })
     })
 }
+
 
 const enrolledCourses = (req, res) => {
     // Get a list of courses that the student is currently enrolled in
