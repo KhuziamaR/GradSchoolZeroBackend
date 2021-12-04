@@ -1,6 +1,17 @@
 const MimeNode = require('nodemailer/lib/mime-node');
 const { v4: uuidv4 } = require('uuid');
 
+const students = (req, res) => {
+    req.db.query("SELECT * FROM student ORDER BY gpa;")
+    .then(students => {
+        res.status(200).send({students: students.rows});
+    })
+    .catch(error => {
+        console.error(error);
+        res.status(500).send({error: "An error occurred."});
+    })
+}
+
 const student = (req, res) => {
     const {id} = req.query;
     if (id) {
@@ -246,5 +257,6 @@ module.exports = {
     enroll,
     enrolledCourses,
     completedCourses,
-    availableCourses
+    availableCourses,
+    students
 }
