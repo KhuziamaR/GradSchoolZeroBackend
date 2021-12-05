@@ -10,7 +10,6 @@ const transporter = createTransport({
 	}
 });
 
-
 const reviewInstructorApplication = (req, res) => {
 	const { id, decision } = req.query;
 
@@ -171,42 +170,48 @@ const reviewStudentApplication = (req, res) => {
 };
 
 const createCourse = (req, res) => {
-    const {name, capacity, instructorid, days, startTime, endTime} = req.query;
-    const id = uuidv4();
-    if (name && capacity && instructorid && days && startTime && endTime) {
-        req.db.query(`
+	const { name, capacity, instructorid, days, startTime, endTime } = req.query;
+	const id = uuidv4();
+	if (name && capacity && instructorid && days && startTime && endTime) {
+		req.db
+			.query(
+				`
 		SELECT * FROM instructor WHERE id = '${instructorid}';
-        `)
-        .then(data => {
-			if (data.rowCount == 1) {
-				const instructorName = data.rows[0].firstname + " " + data.rows[0].lastname;
-				req.db.query(`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime, active) 
-							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}', true );`)
-				.then(_ => {
-					res.status(200).send({msg: "Success!"});
-				})
-				.catch(error => {
-					console.error(error);
-					res.status(500).send({error: "An error Occurred"});
-				})
-			} else {
-				res.status(404).send({error: "Instructor Not Found"});
-			}
-        })
-        .catch(error => {
-            console.error(error);
-            res.status(500).send({error: "An error Occurred"});
-        })
-    } else {
-        console.log("Need inputs")
+        `
+			)
+			.then((data) => {
+				if (data.rowCount == 1) {
+					const instructorName = data.rows[0].firstname + ' ' + data.rows[0].lastname;
+					req.db
+						.query(
+							`INSERT INTO course (id, name, capacity, studentcount, instructorid, instructorname, days, starttime, endtime, active) 
+							VALUES ('${id}', '${name}', ${capacity}, 0, '${instructorid}', '${instructorName}', '${days}','${startTime}', '${endTime}', true );`
+						)
+						.then((_) => {
+							res.status(200).send({ msg: 'Success!' });
+						})
+						.catch((error) => {
+							console.error(error);
+							res.status(500).send({ error: 'An error Occurred when inserting' });
+						});
+				} else {
+					res.status(404).send({ error: 'Instructor Not Found' });
+				}
+			})
+			.catch((error) => {
+				console.error(error);
+				res.status(500).send({ error: 'An error Occurred, cant find instrucotr' });
+			});
+	} else {
+		console.log('Need inputs');
 		res.status(500).send({
 			msg: 'Please send all inputs'
 		});
-    }
-}
+	}
+};
 
 module.exports = {
-    reviewInstructorApplication,
-    reviewStudentApplication,
-    createCourse
-}
+	reviewInstructorApplication,
+	reviewStudentApplication,
+	createCourse
+};
