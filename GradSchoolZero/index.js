@@ -15,7 +15,12 @@ const {
 	completedCourses,
 	availableCourses
 } = require('./src/routes/studentRoutes');
-const { assignGrade } = require('./src/routes/instructorRoutes');
+const {
+	assignGrade,
+	getInstructor,
+	getCoursesTaughtByProfessor,
+	getStudentsForCourse
+} = require('./src/routes/instructorRoutes');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -46,7 +51,9 @@ app.post('/createCourse', createCourse);
 
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
-
+app.get('/getInstructor', getInstructor);
+app.get('/getCoursesTaughtByProfessor', getCoursesTaughtByProfessor);
+app.get('/getStudentsForCourse', getStudentsForCourse);
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');
 });
