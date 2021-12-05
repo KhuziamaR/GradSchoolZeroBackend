@@ -61,10 +61,13 @@ const enrolledCourses = (req, res) => {
 	if (!studentid) return res.status(500).send({ msg: 'Send all required inputs.' });
 	const year = new Date().getFullYear();
 	req.db
-		.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND year = ${year} AND season = '${getSeason()}';`)
+		.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND grade='';`)
 		.then((data) => {
+            if (data.rowCount == 0) {
+                return res.status(200).send({courses: []});
+            }
 			const classesQuery =
-				`SELECT * FROM course` + (data.rowCount == 0 ? '' : ' WHERE ' + buildOrCourseList('', data.rows)) + ';';
+				"SELECT * FROM course WHERE " + buildOrCourseList('', data.rows) + ';';
 			req.db
 				.query(classesQuery)
 				.then((data) => {
@@ -101,23 +104,26 @@ const completedCourses = (req, res) => {
 const dropCourse = (req, res) => {
 	const { studentid, courseid } = req.query;
 	if (!courseid && !studentid) return res.status(500).send({ msg: 'Send all required inputs.' });
+    console.log(`DELETE FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';`);
 	req.db
 		.query(`DELETE FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';`)
 		.then((data) => {
-			const decrementStudentCountQuery = `UPDATE course SET studentcount = studentcount - 1 WHERE id = '${courseid}';`;
-			req.db
-				.query(decrementStudentCountQuery)
-				.then((_) => {
-					console.log('Successfully decremented user from course');
-					res.status(500).send({
-						msg: 'Successfully dropped course!'
-					});
-				})
-				.catch((error) => {
-					res.status(404).send({
-						msg: 'error when decrementing student count'
-					});
-				});
+            if (data.rowCount) {
+                const decrementStudentCountQuery = `UPDATE course SET studentcount = studentcount - 1 WHERE id = '${courseid}';`;
+                req.db
+                    .query(decrementStudentCountQuery)
+                    .then((_) => {
+                        console.log('Successfully decremented user from course');
+                        res.status(200).send({
+                            msg: 'Successfully dropped course!'
+                        });
+                    })
+                    .catch((error) => {
+                        res.status(500).send({
+                            msg: 'error when decrementing student count'
+                        });
+                    });
+            } else res.status(500).send({msg: "Something went wrong."})
 		})
 		.catch((error) => {
 			res.status(500).send({
