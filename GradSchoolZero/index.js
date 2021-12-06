@@ -5,7 +5,13 @@ cli.connect();
 const express = require('express');
 const app = express();
 const { courses, login, signupInstructorApplication, signupStudentApplication } = require('./src/routes/generalRoutes');
-const { reviewInstructorApplication, reviewStudentApplication, createCourse } = require('./src/routes/registrarRoutes');
+const {
+	reviewInstructorApplication,
+	reviewStudentApplication,
+	createCourse,
+	getStudentApplications,
+	getInstructorApplications
+} = require('./src/routes/registrarRoutes');
 const {
 	dropCourse,
 	student,
@@ -51,15 +57,17 @@ app.post('/dropCourse', dropCourse);
 app.post('/reviewStudentApplication', reviewStudentApplication);
 app.post('/reviewInstructorApplication', reviewInstructorApplication);
 app.post('/createCourse', createCourse);
+app.get('/getStudentApplications', getStudentApplications);
+app.get('/getInstructorApplications', getInstructorApplications);
 
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
 app.get('/getInstructor', getInstructor);
 app.get('/getCoursesTaughtByProfessor', getCoursesTaughtByProfessor);
 app.get('/getStudentsForCourse', getStudentsForCourse);
-app.get("/getWaitlistedStudents", getWaitlistedStudents);
-app.post("/reviewWaitlistedStudent", reviewWaitlistedStudent);
-app.get("/getAllInstructors", getAllInstructors);
+app.get('/getWaitlistedStudents', getWaitlistedStudents);
+app.post('/reviewWaitlistedStudent', reviewWaitlistedStudent);
+app.get('/getAllInstructors', getAllInstructors);
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');
 });

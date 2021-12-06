@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { createTransport } = require('nodemailer');
+const e = require('express');
 
 const transporter = createTransport({
 	host: 'smtp.gmail.com',
@@ -210,8 +211,52 @@ const createCourse = (req, res) => {
 	}
 };
 
+const getStudentApplications = (req, res) => {
+	req.db
+		.query(`SELECT * FROM studentApplication;`)
+		.then((data) => {
+			res.status(200).send({
+				data: data.rows
+			});
+		})
+		.catch((error) => {
+			res.status(404).send({
+				msg: 'ERROR while retrieving student applications...'
+			});
+		});
+};
+const getInstructorApplications = (req, res) => {
+	req.db
+		.query(`SELECT * FROM instructorApplication;`)
+		.then((data) => {
+			res.status(200).send({
+				data: data.rows
+			});
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(404).send({
+				msg: 'ERROR while retrieving instructor applications...'
+			});
+		});
+};
+
+/*
+Get student applications route
+Get Instructor Applications route
+Get graduation application route
+Review graduation application (just needs a student id)
+Get all reports 
+Set semester period (request will include a string of the new semester period)
+Please look at the specifications for what happens when the registration period changes (ie when it changes from registration to course-run: give a warning to any student with less than 2 classes, there are more requirements in the specifications)
+Fire instructor
+
+*/
+
 module.exports = {
 	reviewInstructorApplication,
 	reviewStudentApplication,
-	createCourse
+	createCourse,
+	getStudentApplications,
+	getInstructorApplications
 };
