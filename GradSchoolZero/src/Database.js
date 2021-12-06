@@ -101,6 +101,10 @@ class DatabaseClient {
                studentid CHAR(36) NOT NULL
            );
 
+           CREATE TABLE IF NOT EXISTS graduatedStudents (
+               studentid CHAR(36) NOT NULL
+           );
+
            CREATE TABLE IF NOT EXISTS waitlist (
                id CHAR(36) NOT NULL PRIMARY KEY,
                courseid CHAR(36) NOT NULL,
@@ -122,18 +126,19 @@ class DatabaseClient {
 			.catch((e) => console.log(e));
 	}
 
-    resetTables(tables) {
-        const query = (table) => `DROP TABLE ${table};\n`;
-        const queries = (result, tablelst) => {
-            if (tablelst.length == 0) return result;
-            return queries(result + query(tablelst[0]), tablelst.slice(1,tablelst.length));
-        }
-        this.dbclient.query(queries("", tables))
-        .then(_ => console.log("Successfully Deleted tables: "+ tables))
-        .catch(error => {
-            console.log(error);
-        })
-    }
+	resetTables(tables) {
+		const query = (table) => `DROP TABLE ${table};\n`;
+		const queries = (result, tablelst) => {
+			if (tablelst.length == 0) return result;
+			return queries(result + query(tablelst[0]), tablelst.slice(1, tablelst.length));
+		};
+		this.dbclient
+			.query(queries('', tables))
+			.then((_) => console.log('Successfully Deleted tables: ' + tables))
+			.catch((error) => {
+				console.log(error);
+			});
+	}
 }
 
 module.exports = {

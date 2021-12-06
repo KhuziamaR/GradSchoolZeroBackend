@@ -60,24 +60,21 @@ const enrolledCourses = (req, res) => {
 	const { studentid } = req.query;
 	if (!studentid) return res.status(500).send({ msg: 'Send all required inputs.' });
 	const year = new Date().getFullYear();
-	req.db
-		.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND grade='';`)
-		.then((data) => {
-            if (data.rowCount == 0) {
-                return res.status(200).send({courses: []});
-            }
-			const classesQuery =
-				"SELECT * FROM course WHERE " + buildOrCourseList('', data.rows) + ';';
-			req.db
-				.query(classesQuery)
-				.then((data) => {
-					return res.status(200).send({ courses: data.rows });
-				})
-				.catch((error) => {
-					console.log(error);
-					res.status(500).send({ msg: 'An error occurred.' });
-				});
-		});
+	req.db.query(`SELECT * FROM class WHERE studentid = '${studentid}' AND grade='';`).then((data) => {
+		if (data.rowCount == 0) {
+			return res.status(200).send({ courses: [] });
+		}
+		const classesQuery = 'SELECT * FROM course WHERE ' + buildOrCourseList('', data.rows) + ';';
+		req.db
+			.query(classesQuery)
+			.then((data) => {
+				return res.status(200).send({ courses: data.rows });
+			})
+			.catch((error) => {
+				console.log(error);
+				res.status(500).send({ msg: 'An error occurred.' });
+			});
+	});
 };
 
 const completedCourses = (req, res) => {
@@ -104,26 +101,26 @@ const completedCourses = (req, res) => {
 const dropCourse = (req, res) => {
 	const { studentid, courseid } = req.query;
 	if (!courseid && !studentid) return res.status(500).send({ msg: 'Send all required inputs.' });
-    console.log(`DELETE FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';`);
+	console.log(`DELETE FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';`);
 	req.db
 		.query(`DELETE FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';`)
 		.then((data) => {
-            if (data.rowCount) {
-                const decrementStudentCountQuery = `UPDATE course SET studentcount = studentcount - 1 WHERE id = '${courseid}';`;
-                req.db
-                    .query(decrementStudentCountQuery)
-                    .then((_) => {
-                        console.log('Successfully decremented user from course');
-                        res.status(200).send({
-                            msg: 'Successfully dropped course!'
-                        });
-                    })
-                    .catch((error) => {
-                        res.status(500).send({
-                            msg: 'error when decrementing student count'
-                        });
-                    });
-            } else res.status(500).send({msg: "Something went wrong."})
+			if (data.rowCount) {
+				const decrementStudentCountQuery = `UPDATE course SET studentcount = studentcount - 1 WHERE id = '${courseid}';`;
+				req.db
+					.query(decrementStudentCountQuery)
+					.then((_) => {
+						console.log('Successfully decremented user from course');
+						res.status(200).send({
+							msg: 'Successfully dropped course!'
+						});
+					})
+					.catch((error) => {
+						res.status(500).send({
+							msg: 'error when decrementing student count'
+						});
+					});
+			} else res.status(500).send({ msg: 'Something went wrong.' });
 		})
 		.catch((error) => {
 			res.status(500).send({
@@ -278,6 +275,38 @@ const buildOrCourseList = (result, classes) => {
 	return buildOrCourseList(result + `id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
 };
 
+const applyForGraduation = (req, res) => {
+	//`INSERT INTO waitlist (id, studentid, courseid) VALUES ('${uuidv4()}','${studentid}','${courseid}');`
+	const { studentid } = req.query;
+	req.db
+		.query(`SELECT * from graduationApplication WHERE studentid = '${studentid}'`)
+		.then((data) => {
+			if (data.rowCount > 0) {
+				res.status(500).send({
+					msg:
+						'You have already applied for graduation, please wait patiently for the registrar to approve your request.'
+				});
+			}
+		})
+		.catch((error) => {
+			res.status(404).send({
+				msg: 'Error!'
+			});
+		});
+	req.db
+		.query(`INSERT INTO graduationApplication (id, studentid) VALUES ('${uuidv4()}', '${studentid}')`)
+		.then((data) => {
+			res.status(200).send({
+				msg: 'SUCCESS! Application recieved!'
+			});
+		})
+		.catch((error) => {
+			res.status(404).send({
+				msg: 'ERROR, cannot apply for gradutaion.'
+			});
+		});
+};
+
 module.exports = {
 	student,
 	enroll,
@@ -285,5 +314,6 @@ module.exports = {
 	completedCourses,
 	availableCourses,
 	students,
-	dropCourse
+	dropCourse,
+	applyForGraduation
 };

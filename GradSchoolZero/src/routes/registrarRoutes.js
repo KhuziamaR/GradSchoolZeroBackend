@@ -241,6 +241,70 @@ const getInstructorApplications = (req, res) => {
 		});
 };
 
+const getGraduationApplications = (req, res) => {
+	req.db
+		.query(`SELECT * FROM graduationApplication`)
+		.then((data) => {
+			res.status(200).send({
+				data: data.rows
+			});
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(404).send({
+				msg: 'error while retrieving graduation applications'
+			});
+		});
+};
+
+const reviewGraduationApplication = (req, res) => {
+	const { studentid, decision } = req.query;
+
+	if (!studentid) {
+		res.status(500).send({
+			msg: 'Please send student id.'
+		});
+	}
+	if (decision == '0') {
+		req.db.query(`SELECT * FROM graduatedStudents WHERE studentid = '${studentid}';`).then((grads) => {
+			if (grads.rowCount > 0) {
+				res.status(500).send({
+					msg: 'Student has already graduated.'
+				});
+			} else {
+				const graduateStudentQuery = `INSERT INTO graduatedStudents (studentid) VALUES ('${studentid}');`;
+
+				req.db
+					.query(graduateStudentQuery)
+					.then((_) => {
+						const deleteApplicationQuery = `DELETE FROM graduationApplication WHERE studentid = '${studentid}'`;
+						req.db
+							.query(deleteApplicationQuery)
+							.then((_) => {
+								console.log('successfully graduated student and deleted application');
+								res.status(200).send({
+									msg: 'Congratulations, you have graduated!'
+								});
+							})
+							.catch((error) => {
+								res.status(404).send({
+									msg: 'error while deleting graduation application'
+								});
+							});
+					})
+					.catch((error) => {
+						res.status(404).send({
+							msg: 'ERROR while graduating student'
+						});
+					});
+			}
+		});
+	} else {
+		res.status(200).send({
+			msg: 'Graduation application was denied.'
+		});
+	}
+};
 /*
 Get student applications route
 Get Instructor Applications route
@@ -258,5 +322,7 @@ module.exports = {
 	reviewStudentApplication,
 	createCourse,
 	getStudentApplications,
-	getInstructorApplications
+	getInstructorApplications,
+	getGraduationApplications,
+	reviewGraduationApplication
 };
