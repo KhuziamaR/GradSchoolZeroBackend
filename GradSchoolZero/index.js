@@ -19,7 +19,8 @@ const {
 	assignGrade,
 	getInstructor,
 	getCoursesTaughtByProfessor,
-	getStudentsForCourse
+	getStudentsForCourse,
+	getWaitlistedStudents
 } = require('./src/routes/instructorRoutes');
 
 app.use(express.json());
@@ -54,6 +55,7 @@ app.post('/assignGrade', assignGrade);
 app.get('/getInstructor', getInstructor);
 app.get('/getCoursesTaughtByProfessor', getCoursesTaughtByProfessor);
 app.get('/getStudentsForCourse', getStudentsForCourse);
+app.get("/getWaitlistedStudents", getWaitlistedStudents);
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');
 });

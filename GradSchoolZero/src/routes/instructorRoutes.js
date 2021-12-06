@@ -131,15 +131,78 @@ const assignGrade = (req, res) => {
 		});
 };
 
+const getWaitlistedStudents = (req, res) => {
+    const {instructorid} = req.query;
+    // get all of instructors courses
+    // get all of the students on the waitlist for all courses
+    // get all student profiles
+    req.db.query(`SELECT * FROM course WHERE instructorid = '${instructorid}';`)
+    .then(data => {
+        if (data.rowCount == 0) return res.status(200).send({students: []});
+        req.db.query(`SELECT * FROM waitlist WHERE ${modbuildOrCourseList("", data.rows)}`)
+        .then(data2 => {
+            if (data2.rowCount == 0) return res.status(200).send({students: []});
+            const courseIDs = data2.rows.map(val => {return {id: val.courseid}});
+            req.db.query(`SELECT * FROM course WHERE ${buildOrCourseList("", courseIDs)};
+                          SELECT * FROM student WHERE ${buildOrStudentList("", data2.rows)};`)
+            .then(data3 => {
+                const courses = data3[0].rows;
+                const students = data3[1].rows;
+                const waitlist = data2.rows;
+                let studentCourseArr = [];
+                for (let i = 0; i < waitlist.length; i++) {
+                    let val = waitlist[i];
+                    studentCourseArr.push({
+                        student: getObjectFromArr(students, (student) => (student.id === val.studentid)),
+                        course:  getObjectFromArr(courses, (course) => (course.id === val.courseid))
+                    })
+                }
+                return res.status(200).send({data: studentCourseArr});
+            })
+            .catch(error => {
+                console.log(error);
+                res.status(500).send({msg: "Error"});
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({msg: "Error"});
+        })
+    })
+    .catch(error => {
+        console.log(error);
+        res.status(500).send({msg: "Error"});
+    })
+}
+
+const buildOrCourseList = (result, courses) => {
+	if (courses.length == 0) return result;
+	if (courses.length == 1) return result + `id = '${courses[0].id}'`;
+	return buildOrCourseList(result + `id = '${courses[0].id}' OR `, courses.slice(1, courses.length));
+};
+
+const modbuildOrCourseList = (result, courses) => {
+	if (courses.length == 0) return result;
+	if (courses.length == 1) return result + `courseid = '${courses[0].id}'`;
+	return modbuildOrCourseList(result + `courseid = '${courses[0].id}' OR `, courses.slice(1, courses.length));
+};
+
 const buildOrStudentList = (result, studentids) => {
 	if (studentids.length == 0) return result;
 	if (studentids.length == 1) return result + `id = '${studentids[0].studentid}'`;
 	return buildOrStudentList(result + `id = '${studentids[0].studentid}' OR `, studentids.slice(1, studentids.length));
 };
 
+const getObjectFromArr = (list, isObj) => {
+    if (list.length == 0) return null;
+    if (isObj(list[0])) return list[0];
+    return getObjectFromArr(list.slice(1, list.length), isObj);
+}
+
 module.exports = {
 	assignGrade,
 	getInstructor,
 	getCoursesTaughtByProfessor,
-	getStudentsForCourse
+	getStudentsForCourse,
+    getWaitlistedStudents
 };
