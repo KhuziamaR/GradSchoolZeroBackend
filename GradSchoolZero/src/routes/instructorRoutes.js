@@ -175,10 +175,107 @@ const getWaitlistedStudents = (req, res) => {
     })
 }
 
+const reviewWaitlistedStudent = (req, res) => {
+    const {studentid, courseid, decision} = req.query;
+    if (!studentid || !courseid || !decision) return res.status(500).send({msg: "Send all inputs"});
+
+    req.db.query(`DELETE FROM waitlist WHERE studentid = '${studentid}' AND courseid = '${courseid}';`)
+    .then(data1 => {
+        console.log(data1);
+        if (!data1.rowCount) return res.status(500).send({msg: "Something went wrong"});
+        if (!decision) return res.status(200).send({msg: "Success!"});
+        req.db
+		.query(
+			`
+        SELECT * FROM course WHERE id = '${courseid}';
+        SELECT * FROM class WHERE studentid = '${studentid}' AND courseid = '${courseid}';
+        SELECT * FROM class WHERE studentid = '${studentid}' AND grade = '';
+        SELECT * FROM student WHERE id = '${studentid}';
+    `
+		)
+		.then((data) => {
+			// student enrolled already
+			console.log(data);
+			const course = data[0].rows[0];
+			const alreadyEnrolled = data[1].rowCount == 1;
+			const enrolledClasses = data[2].rows;
+			const student = data[3].rows[0];
+			// Student is enrolled already
+			if (alreadyEnrolled) {
+				return res.status(409).send({ msg: 'Student already enrolled' });
+			}
+			// Student has max classes
+			if (enrolledClasses.length == 4) {
+				return res.status(409).send({ msg: 'Student is already registerd in 4 classes.' });
+			}
+
+			//Check if time conflicts exist;
+			const coursesIDListSQL =
+				enrolledClasses.length == 0 ? '' : ' WHERE ' + buildOrClassList('', enrolledClasses);
+			req.db
+				.query(`SELECT * FROM course${coursesIDListSQL};`)
+				.then((data2) => {
+					if (addNewClassConflict(course, data2.rows) && !(enrolledClasses.length == 0)) {
+						return res.status(401).send({
+							msg: 'There exists a time conflict with students enrolled courses and the attempted course.'
+						});
+					}
+					const date = new Date();
+					const addClassQuery = `INSERT INTO class (studentid, courseid, grade, season, year) VALUES ('${studentid}','${courseid}','','${getSeason()}',${date.getFullYear()});
+                                    UPDATE course SET studentCount = ${course.studentcount +
+										1} WHERE id = '${courseid}';`;
+					req.db
+						.query(addClassQuery)
+						.then((_) => {
+							res.status(200).send({ msg: 'Success!' });
+						})
+						.catch((error) => {
+							console.log('Error inserting class: ', error);
+							res.status(500).send({ msg: 'An Error Occurred' });
+						});
+				})
+				.catch((error) => {
+					console.log('Error getting students enrolled courses: ', error);
+					res.status(500).send({ msg: 'An Error Occurred' });
+				});
+		})
+		.catch((error) => {
+			console.log('Error with first request:', error);
+			res.status(500).send({ msg: 'An Error Occurred' });
+		});
+    })
+}
+
+
+const addNewClassConflict = (newCourse, enrolledCourses) => {
+	if (enrolledCourses.length == 0) return false;
+	for (let i = 0; i < enrolledCourses.length; i++) {
+		if (
+			conflicts(
+				newCourse.days,
+				newCourse.starttime,
+				newCourse.endtime,
+				enrolledCourses[i].days,
+				enrolledCourses[i].starttime,
+				enrolledCourses[i].endtime
+			)
+		) {
+			return true;
+		}
+	}
+	return false;
+};
+
 const buildOrCourseList = (result, courses) => {
 	if (courses.length == 0) return result;
 	if (courses.length == 1) return result + `id = '${courses[0].id}'`;
 	return buildOrCourseList(result + `id = '${courses[0].id}' OR `, courses.slice(1, courses.length));
+};
+
+const buildOrClassList = (result, classes) => {
+	if (classes.length == 0) return result;
+	if (classes.length == 1) return result + `id = '${classes[0].courseid}'`;
+	return buildOrClassList(result + `id = '${classes[0].courseid}' OR `, classes.slice(1, classes.length));
 };
 
 const modbuildOrCourseList = (result, courses) => {
@@ -199,10 +296,51 @@ const getObjectFromArr = (list, isObj) => {
     return getObjectFromArr(list.slice(1, list.length), isObj);
 }
 
+
+const getSeason = () => {
+	const date = new Date();
+	const m = date.getMonth() + 1;
+	const seasons = [ 'winter', 'spring', 'summer', 'fall' ];
+	return seasons[Math.floor(m / 3) % 4];
+};
+
+const conflicts = (days1, starttime1, endtime1, days2, starttime2, endtime2) => {
+	const sh1 = parseInt(starttime1.slice(0, 2));
+	const sm1 = parseInt(starttime1.slice(2, 4));
+	const sh2 = parseInt(starttime2.slice(0, 2));
+	const sm2 = parseInt(starttime2.slice(2, 4));
+	const starttimeOverall1 = sh1 * 60 + sm1;
+	const starttimeOverall2 = sh2 * 60 + sm2;
+
+	const eh1 = parseInt(endtime1.slice(0, 2));
+	const em1 = parseInt(endtime1.slice(2, 4));
+	const eh2 = parseInt(endtime2.slice(0, 2));
+	const em2 = parseInt(endtime2.slice(2, 4));
+	const endtimeOverall1 = eh1 * 60 + em1;
+	const endtimeOverall2 = eh2 * 60 + em2;
+
+	const dayConflicts = (days1, days2) => {
+		for (let i = 0; i < days1.length; i++) {
+			if (days2.includes(days1[i])) return true;
+		}
+		return false;
+	};
+	const timeConflicts = (start1, end1, start2, end2) => {
+		return Math.max(start1, start2) < Math.min(end1, end2) || start1 == start2 || endtime1 == endtime2;
+	};
+
+	return (
+		dayConflicts(days1, days2) &&
+		timeConflicts(starttimeOverall1, endtimeOverall1, starttimeOverall2, endtimeOverall2)
+	);
+};
+
+
 module.exports = {
 	assignGrade,
 	getInstructor,
 	getCoursesTaughtByProfessor,
 	getStudentsForCourse,
-    getWaitlistedStudents
+    getWaitlistedStudents,
+    reviewWaitlistedStudent
 };

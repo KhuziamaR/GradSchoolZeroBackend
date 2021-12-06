@@ -20,7 +20,8 @@ const {
 	getInstructor,
 	getCoursesTaughtByProfessor,
 	getStudentsForCourse,
-	getWaitlistedStudents
+	getWaitlistedStudents,
+	reviewWaitlistedStudent
 } = require('./src/routes/instructorRoutes');
 
 app.use(express.json());
@@ -56,6 +57,7 @@ app.get('/getInstructor', getInstructor);
 app.get('/getCoursesTaughtByProfessor', getCoursesTaughtByProfessor);
 app.get('/getStudentsForCourse', getStudentsForCourse);
 app.get("/getWaitlistedStudents", getWaitlistedStudents);
+app.post("/reviewWaitlistedStudent", reviewWaitlistedStudent);
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');
 });
