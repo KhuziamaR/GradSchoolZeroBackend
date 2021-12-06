@@ -29,6 +29,16 @@ const getInstructor = (req, res) => {
 		});
 };
 
+const getAllInstructors = (req, res) => {
+    req.db.query("SELECT * FROM instructor;")
+    .then(data => {
+        return res.status(200).send({instructors: data.rows})
+    })
+    .catch(error => {
+        return res.status(500).send({msg: "Error Occurred"})
+    })
+}
+
 const getCoursesTaughtByProfessor = (req, res) => {
 	const { id } = req.query;
 	const getCoursesTaughtByProfessorQuery = `SELECT * FROM course WHERE instructorid = '${id}'`;
@@ -342,5 +352,6 @@ module.exports = {
 	getCoursesTaughtByProfessor,
 	getStudentsForCourse,
     getWaitlistedStudents,
-    reviewWaitlistedStudent
+    reviewWaitlistedStudent,
+    getAllInstructors
 };
