@@ -305,6 +305,39 @@ const reviewGraduationApplication = (req, res) => {
 		});
 	}
 };
+
+//Registrar to review complaints
+
+const reviewReport = (req, res) => {
+	const {reportID, decision} = req.query;
+	if (!reportID || !decision) return res.status(500).send({ msg: 'Send all inputs'});
+	req.db
+		.query(`SELECT reportID from reports WHERE decision = '${decision}'  ';`) //Selects reports from reports table
+		.then((data) => {
+			if (data.rowCount > 0) {
+				data: data.rows  
+	}
+	else {
+		res.status(500).send({
+			msg: 'No reviews found'
+		});
+	}
+})
+	.catch((error) => {
+		res.status(404).send({
+			msg: 'Error, cannot retrieve instructor data'
+		});
+	});
+};
+
+//
+module.exports = {
+	reviewInstructorApplication,
+	reviewStudentApplication,
+	createCourse,
+	reviewReport
+};
+
 /*
 Get student applications route
 Get Instructor Applications route

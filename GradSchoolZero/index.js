@@ -12,7 +12,8 @@ const {
 	getStudentApplications,
 	getInstructorApplications,
 	getGraduationApplications,
-	reviewGraduationApplication
+	reviewGraduationApplication,
+	reviewReport
 } = require('./src/routes/registrarRoutes');
 const {
 	dropCourse,
@@ -65,6 +66,7 @@ app.get('/getInstructorApplications', getInstructorApplications);
 app.get('/applyForGraduation', applyForGraduation);
 app.get('/getGraduationApplications', getGraduationApplications);
 app.post('/reviewGraduationApplication', reviewGraduationApplication);
+app.get('/reviewReport', reviewReport);
 
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
