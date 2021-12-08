@@ -383,6 +383,28 @@ const reviewCourse = (req, res) => {
 		});
 };
 
+const reviewsForCourse = (req, res) => {
+	const { courseid } = req.query;
+	if (!courseid) {
+		res.status(500).send({
+			msg: 'Please send courseid as input'
+		});
+	}
+
+	req.db
+		.query(`SELECT * FROM reviews WHERE courseid = '${courseid}';`)
+		.then((data) => {
+			res.status(200).send({
+				data: data.rows
+			});
+		})
+		.catch((error) => {
+			res.status(404).send({
+				msg: 'Error while retrieving reviews for course'
+			});
+		});
+};
+
 module.exports = {
 	student,
 	enroll,
@@ -392,5 +414,6 @@ module.exports = {
 	students,
 	dropCourse,
 	applyForGraduation,
-	reviewCourse
+	reviewCourse,
+	reviewsForCourse
 };

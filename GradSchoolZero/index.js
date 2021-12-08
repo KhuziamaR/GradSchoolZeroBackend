@@ -39,7 +39,8 @@ const {
 	completedCourses,
 	availableCourses,
 	applyForGraduation,
-	reviewCourse
+	reviewCourse,
+	reviewsForCourse
 } = require('./src/routes/studentRoutes');
 const {
 	assignGrade,
@@ -73,6 +74,7 @@ app.get('/completedCourses', completedCourses);
 app.get('/availableCourses', availableCourses);
 app.post('/dropCourse', dropCourse);
 app.post('/reviewCourse', reviewCourse);
+app.get('/reviewsForCourse', reviewsForCourse);
 
 //Registrar Routes
 app.post('/reviewStudentApplication', reviewStudentApplication);
