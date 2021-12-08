@@ -399,6 +399,22 @@ const getReports = (req, res) => {
 		})
 	})
 }
+
+const addTabooWords = (req, res) => {
+	const {taboo} = req.query;
+	req.db
+	.query(
+		`INSERT INTO tabooWords (taboo)
+		VALUES ('${taboo}')`)
+	.then((data) => {
+		res.status(200).send({
+			msg:"Added taboo word"
+		})
+	})
+	.catch((error) => {
+		console.log(error);
+	});
+	}
 /*
 Get student applications route
 Get Instructor Applications route
@@ -420,5 +436,6 @@ module.exports = {
 	getGraduationApplications,
 	reviewGraduationApplication,
 	reviewReport,
-	getReports
+	getReports,
+	addTabooWords
 };

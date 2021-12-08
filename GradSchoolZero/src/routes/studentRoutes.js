@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-
+		
 const students = (req, res) => {
 	req.db
 		.query('SELECT * FROM student ORDER BY gpa;')
@@ -327,60 +327,230 @@ const applyForGraduation = (req, res) => {
                 instructorid CHAR(36) NOT NULL
 */
 
+
 const reviewCourse = (req, res) => {
 	const { reviewerid, reviewerName, reviewerWrittenReview, reviewerRating, courseid, instructorid } = req.query;
 	if (!(reviewerid && reviewerName && reviewerWrittenReview && reviewerRating && courseid && instructorid)) {
-		res.status(500).send({
+		return res.status(500).send({
 			msg: 'Please send all inputs!',
 			inputsRequired: 'reviewerid, reviewerName, reviewerWrittenReview, reviewerRating, courseid , instructorid'
 		});
 	}
-	const createReviewQuery = `INSERT INTO reviews (reviewerid, reviewerName, reviewerWrittenReview,reviewerRating, courseid, instructorid) VALUES ('${reviewerid}', '${reviewerName}', '${reviewerWrittenReview}', ${reviewerRating},'${courseid}', '${instructorid}');`;
+	const tabooWordsInString = (review, listOfTabooWords) => {
+		if (listOfTabooWords.length == 0) return 0;
+		return (review.match(new RegExp(listOfTabooWords[0], "g")) || []).length + tabooWordsInString(review, listOfTabooWords.splice(1, listOfTabooWords.length))
+	}
 	req.db
-		.query(createReviewQuery)
-		.then((result) => {
-			if (result.rowCount == 0) {
-				res.status(500).send({
-					msg: 'error while inserting into reviews'
-				});
-			}
-			console.log('INSERTED INTO REVIEWS', instructorid);
+	.query(`SELECT * FROM tabooWords`)
+	.then((data) => {
+		const words = data.rows.map(word => word.taboo);
+		console.log(tabooWordsInString(reviewerWrittenReview, words))
+		if (tabooWordsInString(reviewerWrittenReview, words) == 0) {
+			const createReviewQuery = `INSERT INTO reviews (reviewerid, reviewerName, reviewerWrittenReview,reviewerRating, courseid, instructorid) VALUES ('${reviewerid}', '${reviewerName}', '${reviewerWrittenReview}', ${reviewerRating},'${courseid}', '${instructorid}');`;
+			console.log(createReviewQuery)
 			req.db
-				.query(`SELECT * FROM instructor WHERE id = '${instructorid}';`)
-				.then((instructorData) => {
-					let { rating, numberofreviews } = instructorData.rows[0];
-					numberofreviews += 1;
-					rating = (rating + reviewerRating) / numberofreviews;
-
-					const updateInstructorQuery = `UPDATE instructor SET rating = ${rating}, numberOfReviews = ${numberofreviews} WHERE id = '${instructorid}';`;
-
-					req.db
-						.query(updateInstructorQuery)
-						.then((_) => {
-							console.log('hi');
-							res.status(200).send({
-								msg: 'Succesfuly created review and updated instructor rating!'
-							});
-						})
-						.catch((error) => {
-							console.log(error);
-							res.status(404).send({
-								msg: 'Error while updating instructor rating :( '
-							});
-						});
-				})
-				.catch((error) => {
-					console.log(error);
-					res.status(404).send({
-						msg: 'error while retrieving instructor data :( '
+			.query(createReviewQuery)
+			.then(result => {
+				console.log(result)
+			    if (result.rowCount == 0) {
+					return res.status(500).send({
+						msg: 'error while inserting into reviews'
 					});
-				});
-		})
-		.catch((error) => {
-			res.status(500).send({
-				msg: 'error while creating review'
-			});
-		});
+				}
+				console.log('INSERTED INTO REVIEWS', instructorid);
+				req.db.query(`SELECT * FROM instructor WHERE id = '${instructorid}';`)
+				.then((instructorData) => {
+                    let { rating, numberofreviews } = instructorData.rows[0];
+                    numberofreviews += 1;
+                    rating = (rating + reviewerRating) / numberofreviews;
+                    const updateInstructorQuery = `UPDATE instructor SET rating = ${rating}, numberOfReviews = ${numberofreviews} WHERE id = '${instructorid}';`;
+                    req.db.query(updateInstructorQuery)
+                    .then((_) => {
+                        console.log('hi');
+                        return res.status(200).send({
+                            msg: 'Succesfuly created review and updated instructor rating!'
+                        });
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        return res.status(404).send({
+                            msg: 'Error while updating instructor rating :( '
+                        });
+                    });
+				})
+                .catch((error) => {
+                    console.log(error);
+                    return res.status(404).send({
+                        msg: 'error while retrieving instructor data :( '
+                    });
+                });
+            })
+            .catch((error) => {
+				console.log(error)
+                return res.status(500).send({
+                    msg: 'error while creating review'
+                });
+            });
+        }
+		else 
+
+
+
+
+
+
+        if (tabooWordsInString(reviewerWrittenReview, words) < 3) {
+            req.db
+			.query(`SELECT * FROM student WHERE id = '${reviewerid}'`)
+			.then((data2) => {
+				if (data2.rowCount == 0) {
+					return res.status(404).send({msg: `No student found`})
+				}
+				console.log(data2)
+				let suspendedQuery;
+				if (data2.rows[0].warnings == 2) { 
+					suspendedQuery = `UPDATE student SET warnings = 0, suspended = true WHERE id = '${reviewerid}'`
+				}
+				else {
+					suspendedQuery = `UPDATE student SET warnings = warnings + 1 WHERE id = '${reviewerid}'`
+				}
+				req.db
+					.query(suspendedQuery)
+					.then((result) => {
+						
+                        const createReviewQuery = `INSERT INTO reviews (reviewerid, reviewerName, reviewerWrittenReview,reviewerRating, courseid, instructorid) VALUES ('${reviewerid}', '${reviewerName}', '${reviewerWrittenReview}', ${reviewerRating},'${courseid}', '${instructorid}');`;
+                        req.db.query(createReviewQuery)
+                        .then((result) => {
+                            if (result.rowCount == 0) {
+                                return res.status(500).send({
+                                    msg: 'error while inserting into reviews'
+                                });
+                            }
+                            console.log('INSERTED INTO REVIEWS', instructorid);
+                            req.db.query(`SELECT * FROM instructor WHERE id = '${instructorid}';`)
+                            .then((instructorData) => {
+                                let { rating, numberofreviews } = instructorData.rows[0];
+                                numberofreviews += 1;
+                                rating = (rating + reviewerRating) / numberofreviews;
+                                const updateInstructorQuery = `UPDATE instructor SET rating = ${rating}, numberOfReviews = ${numberofreviews} WHERE id = '${instructorid}';`;
+                                req.db.query(updateInstructorQuery)
+                                .then((_) => {
+                                    console.log('hi');
+                                    return res.status(200).send({
+                                        msg: 'Succesfuly created review and updated instructor rating!'
+                                    });
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                    return res.status(404).send({
+                                        msg: 'Error while updating instructor rating :( '
+                                    });
+                                });
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                return res.status(404).send({
+                                    msg: 'error while retrieving instructor data :( '
+                                });
+                            });
+                        })
+                        .catch((error) => {
+                            return res.status(500).send({
+                                msg: 'error while creating review'
+                            });
+                        });
+
+
+
+					})
+					.catch(error => {
+						console.log(error);
+						return res.status(500).send({msg: "Error updating warnings"});
+					})
+				}) 
+			.catch(error => {
+				console.log(error);
+				return res.status(500).send({msg: "Error getting type info"});
+			})
+        }
+
+		
+
+
+		else {
+			req.db
+			.query(`SELECT * FROM student WHERE id = '${reviewerid}'`)
+			.then((data2) => {
+				if (data2.rowCount == 0) {
+					return res.status(404).send({msg: `No student found`})
+				}
+				console.log(data2)
+				let suspendedQuery;
+				if (data2.rows[0].warnings >= 1) { 
+					suspendedQuery = `UPDATE student SET warnings = 0, suspended = true WHERE id = '${reviewerid}'`
+				}
+				else {
+					suspendedQuery = `UPDATE student SET warnings = warnings + 2 WHERE id = '${reviewerid}'`
+				}
+				req.db
+					.query(suspendedQuery)
+                    .then(result => {
+                        
+                        const createReviewQuery = `INSERT INTO reviews (reviewerid, reviewerName, reviewerWrittenReview,reviewerRating, courseid, instructorid) VALUES ('${reviewerid}', '${reviewerName}', '${reviewerWrittenReview}', ${reviewerRating},'${courseid}', '${instructorid}');`;
+                        req.db.query(createReviewQuery)
+                        .then((result) => {
+                            if (result.rowCount == 0) {
+                                return res.status(500).send({
+                                    msg: 'error while inserting into reviews'
+                                });
+                            }
+                            console.log('INSERTED INTO REVIEWS', instructorid);
+                            req.db.query(`SELECT * FROM instructor WHERE id = '${instructorid}';`)
+                            .then((instructorData) => {
+                                let { rating, numberofreviews } = instructorData.rows[0];
+                                numberofreviews += 1;
+                                rating = (rating + reviewerRating) / numberofreviews;
+                                const updateInstructorQuery = `UPDATE instructor SET rating = ${rating}, numberOfReviews = ${numberofreviews} WHERE id = '${instructorid}';`;
+                                req.db.query(updateInstructorQuery)
+                                .then((_) => {
+                                    console.log('hi');
+                                    return res.status(200).send({
+                                        msg: 'Succesfuly created review and updated instructor rating!'
+                                    });
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                    return res.status(404).send({
+                                        msg: 'Error while updating instructor rating :( '
+                                    });
+                                });
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                return res.status(404).send({
+                                    msg: 'error while retrieving instructor data :( '
+                                });
+                            });
+                        })
+                        .catch((error) => {
+                            return res.status(500).send({
+                                msg: 'error while creating review'
+                            });
+                        });
+
+
+                    })
+					.catch(error => {
+						console.log(error);
+						return res.status(500).send({msg: "Error updating warnings"});
+					})
+				}) 
+			.catch(error => {
+				console.log(error);
+				return res.status(500).send({msg: "Error getting type info"});
+			})
+		}
+	});
 };
 
 const reviewsForCourse = (req, res) => {

@@ -142,6 +142,9 @@ class DatabaseClient {
                 reportedType VARCHAR(64) NOT NULL,
                 writtenReport VARCHAR(256)
             );
+            CREATE TABLE IF NOT EXISTS tabooWords (
+                taboo VARCHAR(256) NOT NULL UNIQUE
+            )
 
             `
 			)

@@ -34,7 +34,8 @@ const {
 	getGraduationApplications,
 	reviewGraduationApplication,
 	reviewReport,
-	getReports
+	getReports,
+	addTabooWords
 } = require('./src/routes/registrarRoutes');
 const {
 	dropCourse,
@@ -93,6 +94,7 @@ app.get('/getGraduationApplications', getGraduationApplications);
 app.post('/reviewGraduationApplication', reviewGraduationApplication);
 app.post('/reviewReport', reviewReport);
 app.get('/getReports', getReports);
+app.post('/addTabooWords', addTabooWords);
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
 app.get('/getInstructor', getInstructor);
