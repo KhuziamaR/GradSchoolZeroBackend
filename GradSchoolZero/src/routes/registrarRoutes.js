@@ -309,6 +309,53 @@ const reviewGraduationApplication = (req, res) => {
 		});
 	}
 };
+
+const getStudentReport = (req, res) => {
+	req.db
+	.query(`SELECT * FROM studentReports`)
+	.then((DatabaseClient) => {
+		res.status(200).send({
+			data:data.rows
+		})
+	})
+	.catch((error) => {
+		console.log(error)
+		res.status(404).send({
+			msg: 'No student reports found'
+		})
+	})
+}
+const getInstructorReport = (req, res) => {
+	req.db
+	.query(`SELECT * FROM instructorReports`)
+	.then((data) => {
+		res.status(200).send({
+			data:data.rows
+		})
+	})
+	.catch((error) => {
+		console.log(error)
+		res.status(404).send({
+			msg: 'No instructor reports found'
+		})
+	})
+}
+
+const getInstructorToStudentReport = (req, res) => {
+	req.db
+	.query(`SELECT * FROM instructorToStudentReports`)
+	.then((_) => {
+		res.status(200).send({
+			data:data.rows
+		})
+	})
+	.catch((error) => {
+		res.status(404).send({
+			msg: 'No instructor reports on students found'
+		})
+	})
+}
+
 /*
 Get student applications route
 Get Instructor Applications route
@@ -328,5 +375,8 @@ module.exports = {
 	getStudentApplications,
 	getInstructorApplications,
 	getGraduationApplications,
-	reviewGraduationApplication
+	reviewGraduationApplication,
+	getStudentReport,
+	getInstructorReport,
+	getInstructorToStudentReport
 };

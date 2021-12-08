@@ -345,6 +345,37 @@ const conflicts = (days1, starttime1, endtime1, days2, starttime2, endtime2) => 
 	);
 };
 
+//Instructor report to student
+/*
+            CREATE TABLE IF NOT EXISTS instructorToStudentReports (
+                reportID CHAR(36) NOT NULL PRIMARY KEY,
+                instructorName VARCHAR(64) NOT NULL,
+                instructorID CHAR(36) NOT NULL,
+                studentName VARCHAR(64) NOT NULL,
+                studentID CHAR(36) NOT NULL,
+                writtenReports VARCHAR(256)
+            );
+*/
+
+const instructorReport = (req, res) => {
+	const {instructorName, instructorID, studentName, studentID, writtenReports} = req.query;
+	if (!instructorName || !instructorID || !studentName || !studentID || !writtenReports) return res.status(500).send({msg: "Send all inputs"});
+	req.db
+	.query(
+		`INSERT INTO instructorToStudentReports (reportID, instructorName, instructorID, studentName, studentID, writtenReports)
+		VALUES ('${uuidv4()}', '${instructorName}','${instructorID}','${studentName}','${studentID}','${writtenReports}') `
+		)
+		.then((_) => {
+			res.status(200).send({
+				msg: `Report submitted!`
+			})
+		})
+		.catch((error) => {
+			res.status(500).send({
+				msg: 'Error creating report'
+			});
+		});
+	}
 
 module.exports = {
 	assignGrade,
@@ -353,5 +384,6 @@ module.exports = {
 	getStudentsForCourse,
     getWaitlistedStudents,
     reviewWaitlistedStudent,
-    getAllInstructors
+    getAllInstructors,
+	instructorReport
 };

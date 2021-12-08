@@ -3,9 +3,9 @@ const { Client } = require('pg');
 class DatabaseClient {
 	constructor() {
 		this.dbclient = new Client({
-			user: process.env.USERNAME,
-			password: process.env.PASSWORD,
-			host: process.env.HOST,
+			user: 'postgres',
+			password: '5432',
+			host: 'localhost',
 			port: 5432,
 			database: 'gradschoolzerodb'
 		});
@@ -131,6 +131,33 @@ class DatabaseClient {
             SELECT 'pre-registration'
             WHERE NOT EXISTS (SELECT * FROM semesterPeriod);
 
+            CREATE TABLE IF NOT EXISTS studentReports (
+                reportID CHAR(36) NOT NULL PRIMARY KEY,
+                studentName VARCHAR(64) NOT NULL,
+                studentID CHAR(36) NOT NULL,
+                reportedName VARCHAR(64) NOT NULL,
+                reportedID CHAR(36) NOT NULL,
+                writtenReports VARCHAR(256)
+            );
+
+            CREATE TABLE IF NOT EXISTS instructorReports (
+                reportID CHAR(36) NOT NULL PRIMARY KEY,
+                studentName VARCHAR(64) NOT NULL,
+                studentID CHAR(36) NOT NULL,
+                reportedName VARCHAR(64) NOT NULL,
+                reportedID CHAR(36) NOT NULL,
+                writtenReports VARCHAR(256)
+            );
+            
+            CREATE TABLE IF NOT EXISTS instructorToStudentReports (
+                reportID CHAR(36) NOT NULL PRIMARY KEY,
+                instructorName VARCHAR(64) NOT NULL,
+                instructorID CHAR(36) NOT NULL,
+                studentName VARCHAR(64) NOT NULL,
+                studentID CHAR(36) NOT NULL,
+                writtenReports VARCHAR(256)
+            );
+            
             `
 			)
 			.then((results) => console.log('Created Tables Successfully'))
