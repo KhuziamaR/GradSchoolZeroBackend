@@ -153,10 +153,43 @@ const signupStudentApplication = (req, res) => {
 		});
 	}
 };
+/*
+CREATE TABLE IF NOT EXISTS reports (
+                id CHAR(36) NOT NULL PRIMARY KEY,
+                reporterName VARCHAR(64) NOT NULL,
+                reporterID CHAR(36) NOT NULL,
+                reporterType varchar(64) NOT NULL,
+                reportedName VARCHAR(64) NOT NULL,
+                reportedID CHAR(36) NOT NULL,
+                reportedType VARCHAR(64) NOT NULL,
+                writtenReport VARCHAR(256)
+            );
+*/
+const submitReport = (req, res) => {
+	const {reporterName, reporterID, reporterType, reportedName, reportedID, reportedType,writtenReport} = req.query;
+	if (!reporterName || !reporterID ||!reporterType ||!reportedName ||!reportedID || !reportedType || !writtenReport) return res.status(500).send({msg:"Send all inputs"});
+	req.db
+	.query(
+		`INSERT INTO reports (id, reporterName, reporterID, reporterType, reportedName, reportedID, reportedType, writtenReport)
+		VALUES ('${uuidv4()}','${reporterName}','${reporterID}','${reporterType}','${reportedName}','${reportedID}','${reportedType}','${writtenReport}')`
+	)
+	.then((_) => {
+		res.status(200).send({
+			msg: `Report Submitted!`
+		})
+	})
+	.catch((error) => {
+		console.log(error)
+		res.status(500).send({
+			msg: 'Error creating report'
+		});
+	});
+}
 
 module.exports = {
 	courses,
 	login,
 	signupInstructorApplication,
-	signupStudentApplication
+	signupStudentApplication,
+	submitReport
 };

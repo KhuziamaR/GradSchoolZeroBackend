@@ -1,7 +1,6 @@
 const { DatabaseClient } = require('./src/Database');
 const cli = new DatabaseClient();
 cli.connect();
-
 // const tables = [
 // 	'instructor',
 // 	'class',
@@ -20,7 +19,12 @@ cli.connect();
 
 const express = require('express');
 const app = express();
-const { courses, login, signupInstructorApplication, signupStudentApplication } = require('./src/routes/generalRoutes');
+const { 
+	courses, 
+	login, 
+	signupInstructorApplication, 
+	submitReport,
+	signupStudentApplication } = require('./src/routes/generalRoutes');
 const {
 	reviewInstructorApplication,
 	reviewStudentApplication,
@@ -29,9 +33,8 @@ const {
 	getInstructorApplications,
 	getGraduationApplications,
 	reviewGraduationApplication,
-	getStudentReport,
-	getInstructorReport,
-	getInstructorToStudentReport
+	reviewReport,
+	getReports
 } = require('./src/routes/registrarRoutes');
 const {
 	dropCourse,
@@ -43,8 +46,7 @@ const {
 	availableCourses,
 	applyForGraduation,
 	reviewCourse,
-	reviewsForCourse,
-	studentReport
+	reviewsForCourse
 } = require('./src/routes/studentRoutes');
 const {
 	assignGrade,
@@ -53,8 +55,7 @@ const {
 	getStudentsForCourse,
 	getWaitlistedStudents,
 	reviewWaitlistedStudent,
-	getAllInstructors,
-	instructorReport
+	getAllInstructors
 } = require('./src/routes/instructorRoutes');
 
 app.use(express.json());
@@ -69,7 +70,7 @@ app.get('/courses', courses);
 app.post('/login', login);
 app.post('/signupInstructorApplication', signupInstructorApplication);
 app.post('/signupStudentApplication', signupStudentApplication);
-
+app.post('/submitReport', submitReport);
 // Student Routes
 app.get('/student', student);
 app.get('/students', students);
@@ -80,7 +81,6 @@ app.get('/availableCourses', availableCourses);
 app.post('/dropCourse', dropCourse);
 app.post('/reviewCourse', reviewCourse);
 app.get('/reviewsForCourse', reviewsForCourse);
-app.post('/studentReport', studentReport);
 
 //Registrar Routes
 app.post('/reviewStudentApplication', reviewStudentApplication);
@@ -91,10 +91,8 @@ app.get('/getInstructorApplications', getInstructorApplications);
 app.get('/applyForGraduation', applyForGraduation);
 app.get('/getGraduationApplications', getGraduationApplications);
 app.post('/reviewGraduationApplication', reviewGraduationApplication);
-app.get('/getStudentReport', getStudentReport);
-app.get('/getInstructorReport', getInstructorReport);
-app.get('/getInstructorToStudentReport', getInstructorToStudentReport);
-
+app.post('/reviewReport', reviewReport);
+app.get('/getReports', getReports);
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
 app.get('/getInstructor', getInstructor);
@@ -103,7 +101,6 @@ app.get('/getStudentsForCourse', getStudentsForCourse);
 app.get('/getWaitlistedStudents', getWaitlistedStudents);
 app.post('/reviewWaitlistedStudent', reviewWaitlistedStudent);
 app.get('/getAllInstructors', getAllInstructors);
-app.post('/instructorReport', instructorReport);
 app.get('/', (req, res) => {
 	res.send('SEND REQUESTS TO \n /classes \n /professors \n /signin/:username/:password/:type');
 });

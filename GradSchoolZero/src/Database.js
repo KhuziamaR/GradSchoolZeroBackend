@@ -33,6 +33,7 @@ class DatabaseClient {
                email VARCHAR(64) NOT NULL,
                password VARCHAR(64),
                warnings INT NOT NULL,
+               suspended BOOLEAN NOT NULL,
 	           gpa FLOAT
            );
 
@@ -131,33 +132,17 @@ class DatabaseClient {
             SELECT 'pre-registration'
             WHERE NOT EXISTS (SELECT * FROM semesterPeriod);
 
-            CREATE TABLE IF NOT EXISTS studentReports (
-                reportID CHAR(36) NOT NULL PRIMARY KEY,
-                studentName VARCHAR(64) NOT NULL,
-                studentID CHAR(36) NOT NULL,
+            CREATE TABLE IF NOT EXISTS reports (
+                id CHAR(36) NOT NULL PRIMARY KEY,
+                reporterName VARCHAR(64) NOT NULL,
+                reporterID CHAR(36) NOT NULL,
+                reporterType varchar(64) NOT NULL,
                 reportedName VARCHAR(64) NOT NULL,
                 reportedID CHAR(36) NOT NULL,
-                writtenReports VARCHAR(256)
+                reportedType VARCHAR(64) NOT NULL,
+                writtenReport VARCHAR(256)
             );
 
-            CREATE TABLE IF NOT EXISTS instructorReports (
-                reportID CHAR(36) NOT NULL PRIMARY KEY,
-                studentName VARCHAR(64) NOT NULL,
-                studentID CHAR(36) NOT NULL,
-                reportedName VARCHAR(64) NOT NULL,
-                reportedID CHAR(36) NOT NULL,
-                writtenReports VARCHAR(256)
-            );
-            
-            CREATE TABLE IF NOT EXISTS instructorToStudentReports (
-                reportID CHAR(36) NOT NULL PRIMARY KEY,
-                instructorName VARCHAR(64) NOT NULL,
-                instructorID CHAR(36) NOT NULL,
-                studentName VARCHAR(64) NOT NULL,
-                studentID CHAR(36) NOT NULL,
-                writtenReports VARCHAR(256)
-            );
-            
             `
 			)
 			.then((results) => console.log('Created Tables Successfully'))

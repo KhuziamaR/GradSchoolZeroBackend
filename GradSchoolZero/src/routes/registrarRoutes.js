@@ -96,7 +96,7 @@ const reviewInstructorApplication = (req, res) => {
 
 const reviewStudentApplication = (req, res) => {
 	const { id, decision } = req.query;
-
+	console.log(req.query)
 	if (decision == '0') {
 		const applicationQuery = `SELECT * FROM studentApplication WHERE id = '${id}';  `;
 		req.db
@@ -137,7 +137,8 @@ const reviewStudentApplication = (req, res) => {
 								*/
 							//  `INSERT INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
 
-							const createStudentQuery = `INSERT INTO student (id, firstName, lastName, email, password, warnings, gpa) VALUES ('${uuidv4()}', '${studentApp.firstname}','${studentApp.lastname}', '${studentApp.email}','',0, 4.0);`;
+							const createStudentQuery = `INSERT INTO student (id, firstName, lastName, email, password, warnings, suspended, gpa) VALUES ('${uuidv4()}', '${studentApp.firstname}','${studentApp.lastname}', '${studentApp.email}','',0, false, 4.0);`;
+							console.log(createStudentQuery)
 							req.db
 								.query(createStudentQuery)
 								.then((result) => {
@@ -310,24 +311,82 @@ const reviewGraduationApplication = (req, res) => {
 	}
 };
 
-const getStudentReport = (req, res) => {
-	req.db
-	.query(`SELECT * FROM studentReports`)
-	.then((DatabaseClient) => {
-		res.status(200).send({
-			data:data.rows
+const reviewReport = (req, res) => {
+	const {id, decision} = req.query;
+	if (!decision) {
+		req.db
+		.query(`DELETE FROM reports WHERE id = '${id}'`)
+		.then((data) => {
+			if (data.rowCount == 0) {
+				res.status(500).send({
+					msg: `Failed to delete report`
+				})
+			}
+			else {
+				res.status(200).send({
+					msg: `Successfully deleted report`
+				})
+			}
 		})
+	}
+	else {
+		req.db
+		.query(`SELECT * FROM reports WHERE id = '${id}'`)
+		.then((data) => {
+			const report = data.rows[0];
+			req.db
+			.query(`SELECT * FROM ${report.reportedtype} WHERE id = '${report.reportedid}'`)
+			.then((data2) => {
+				if (data2.rowCount == 0) {
+					return res.status(404).send({msg: `No student/instructor found`})
+				}
+				console.log(data2)
+				let suspendedQuery;
+				if (data2.rows[0].warnings == 2) { 
+					suspendedQuery = `UPDATE ${report.reportedtype} SET warnings = 0, suspended = true WHERE id = '${report.reportedid}'`
+				}
+				else {
+					suspendedQuery = `UPDATE ${report.reportedtype} SET warnings = warnings + 1 WHERE id = '${report.reportedid}'`
+				}
+				req.db
+			.query(suspendedQuery)
+			.then((result) => {
+				if (result.rowCount > 0) {
+					res.status(200).send({
+						msg: 'Sucessfully updated warnings'
+					})
+				}
+				else {
+					res.status(500).send({
+						msg: 'Failed to update warnings'
+					})
+				}
+				req.db
+					.query(`DELETE FROM reports WHERE id = '${id}'`)
+					.catch((error) => {
+						console.log(error);
+					})
+			})
+			.catch(error => {
+				console.log(error);
+				res.status(500).send({msg: "Error updating warnings"});
+			})
+		}) 
+		.catch(error => {
+            console.log(error);
+            res.status(500).send({msg: "Error getting type info"});
+        })
 	})
-	.catch((error) => {
-		console.log(error)
-		res.status(404).send({
-			msg: 'No student reports found'
-		})
+	.catch(error => {
+		console.log(error);
+		res.status(500).send({msg: "Error getting reporterID"});
 	})
+	}
 }
-const getInstructorReport = (req, res) => {
+
+const getReports = (req, res) => {
 	req.db
-	.query(`SELECT * FROM instructorReports`)
+	.query(`SELECT * FROM reports`)
 	.then((data) => {
 		res.status(200).send({
 			data:data.rows
@@ -336,26 +395,10 @@ const getInstructorReport = (req, res) => {
 	.catch((error) => {
 		console.log(error)
 		res.status(404).send({
-			msg: 'No instructor reports found'
+			msg: 'No reports found'
 		})
 	})
 }
-
-const getInstructorToStudentReport = (req, res) => {
-	req.db
-	.query(`SELECT * FROM instructorToStudentReports`)
-	.then((_) => {
-		res.status(200).send({
-			data:data.rows
-		})
-	})
-	.catch((error) => {
-		res.status(404).send({
-			msg: 'No instructor reports on students found'
-		})
-	})
-}
-
 /*
 Get student applications route
 Get Instructor Applications route
@@ -376,7 +419,6 @@ module.exports = {
 	getInstructorApplications,
 	getGraduationApplications,
 	reviewGraduationApplication,
-	getStudentReport,
-	getInstructorReport,
-	getInstructorToStudentReport
+	reviewReport,
+	getReports
 };

@@ -405,44 +405,6 @@ const reviewsForCourse = (req, res) => {
 		});
 };
 
-const studentReport = (req, res) => {
-	console.log(req.query);
-	const {studentName, studentID, type, reportedName, reportedID, writtenReports} = req.query;
-	if (!studentName || !studentID || !type || !reportedName || !reportedID || !writtenReports)  return res.status(500).send({msg: "Send all inputs"});
-	if (type.toLowerCase() == 'student') {
-		req.db.query( //Stores into studentReports
-				`INSERT INTO studentReports (reportID, studentName, studentID, reportedName, reportedID, writtenReports)
-				VALUES ('${uuidv4()}', '${studentName}', '${studentID}', '${reportedName}', '${reportedID}', '${writtenReports}')`
-				)
-			.then((_) => {
-				res.status(200).send({
-					msg: `Report submitted!`
-			});
-		})
-		.catch((error) => {
-			res.status(500).send({
-				msg: 'Error creating report'
-			});
-		});
-	}
-	if (type.toLowerCase() == 'instructor') {
-		req.db.query( //Stores into instructorReports
-				`INSERT INTO instructorReports (reportID, studentName, studentID, reportedName, reportedID, writtenReports) 
-				VALUES ('${uuidv4()}', '${studentName}', '${studentID}', '${reportedName}', '${reportedID}', '${writtenReports}')`
-				)
-			.then((_) => {
-				res.status(200).send({
-					msg: `Report submitted!`
-			});
-		})
-		.catch((error) => {
-			res.status(500).send({
-				msg: 'Error creating report'
-			});
-		});
-	}
-}
-
 module.exports = {
 	student,
 	enroll,
@@ -454,5 +416,4 @@ module.exports = {
 	applyForGraduation,
 	reviewCourse,
 	reviewsForCourse,
-	studentReport
 };
