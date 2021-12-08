@@ -1,51 +1,57 @@
 const { v4: uuidv4 } = require('uuid');
 
 const courses = (req, res) => {
-	req.db.query("SELECT * FROM course WHERE active = true")
-	.then(data => {
-		res.status(200).send(data.rows);
-	})
-	.catch(error => {
-		console.error(error);
-		res.status(500).send({error: "An error occurred."});
-	})
+	req.db
+		.query('SELECT * FROM course WHERE active = true')
+		.then((data) => {
+			res.status(200).send(data.rows);
+		})
+		.catch((error) => {
+			console.error(error);
+			res.status(500).send({ error: 'An error occurred.' });
+		});
 };
 
-
-const login =  (req, res) => {
-	const {email, password, type} = req.query;
-	console.log(req.query)
+const login = (req, res) => {
+	const { email, password, type } = req.query;
+	console.log(req.query);
 	if (email && password && type) {
-		console.log(`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');`);
-		req.db.query(`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');
+		console.log(
+			`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');`
+		);
+		req.db
+			.query(
+				`SELECT * FROM ${type} WHERE (email = '${email}' AND password = '${password}') OR (email = '${email}' AND password = '');
                       SELECT * FROM semesterPeriod;
-        `)
-		.then(data => {
-            period = data[1].rows[0].period;
-			console.log(data)
-            if (data[0].rowCount === 1) {
-                if (data[0].rows[0].password == "") {
-                    req.db.query(`UPDATE ${type} SET password = '${password}' WHERE id = '${data[0].rows[0].id}'`)
-                    .then(_ => {
-                        res.status(200).send({auth: "true", period, id: data[0].rows[0].id});
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        res.status(500).send({error: "An Error Occurred"});
-                    })
-                } else {
-                    res.status(200).send({auth: "true", period, id: data[0].rows[0].id});
-                }
-            } else {
-                res.status(401).send({auth: "false"});
-            }
-		})
-		.catch(err => {
-			console.error(err);
-			res.status(500).send({error: "An Error Occurred"});
-		})
+        `
+			)
+			.then((data) => {
+				period = data[1].rows[0].period;
+				console.log(data);
+				if (data[0].rowCount === 1) {
+					if (data[0].rows[0].password == '') {
+						req.db
+							.query(`UPDATE ${type} SET password = '${password}' WHERE id = '${data[0].rows[0].id}'`)
+							.then((_) => {
+								res.status(200).send({ auth: 'true', period, id: data[0].rows[0].id });
+							})
+							.catch((err) => {
+								console.error(err);
+								res.status(500).send({ error: 'An Error Occurred' });
+							});
+					} else {
+						res.status(200).send({ auth: 'true', period, id: data[0].rows[0].id });
+					}
+				} else {
+					res.status(401).send({ auth: 'false' });
+				}
+			})
+			.catch((err) => {
+				console.error(err);
+				res.status(500).send({ error: 'An Error Occurred' });
+			});
 	} else {
-		res.status(500).send({msg: "Error, Send all required Fields"});
+		res.status(500).send({ msg: 'Error, Send all required Fields' });
 	}
 };
 
@@ -97,7 +103,6 @@ const signupInstructorApplication = (req, res) => {
 	}
 };
 
-
 const signupStudentApplication = (req, res) => {
 	//   id CHAR(16) NOT NULL PRIMARY KEY,
 	//             firstName VARCHAR(64) NOT NULL,
@@ -118,11 +123,11 @@ const signupStudentApplication = (req, res) => {
 					});
 				} else {
 					const insertQuery = `INSERT INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
-					console.log("Inserting")
+					console.log('Inserting');
 					req.db
 						.query(insertQuery)
 						.then((success) => {
-							console.log("StudentApplication")
+							console.log('StudentApplication');
 							res.status(200).send({
 								msg: 'Success! Application recieved for student.'
 							});
@@ -142,7 +147,7 @@ const signupStudentApplication = (req, res) => {
 				});
 			});
 	} else {
-		console.log("Need inputs")
+		console.log('Need inputs');
 		res.send({
 			msg: 'Please send all inputs'
 		});
@@ -150,8 +155,8 @@ const signupStudentApplication = (req, res) => {
 };
 
 module.exports = {
-    courses,
-    login,
-    signupInstructorApplication,
-    signupStudentApplication
-}
+	courses,
+	login,
+	signupInstructorApplication,
+	signupStudentApplication
+};

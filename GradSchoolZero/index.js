@@ -2,6 +2,22 @@ const { DatabaseClient } = require('./src/Database');
 const cli = new DatabaseClient();
 cli.connect();
 
+// const tables = [
+// 	'instructor',
+// 	'class',
+// 	'student',
+// 	'registrar',
+// 	'course',
+// 	'studentApplication',
+// 	'instructorApplication',
+// 	'graduationApplication',
+// 	'graduatedStudents',
+// 	'waitlist',
+// 	'reviews',
+// 	'semesterPeriod'
+// ];
+// cli.resetTables(tables);
+
 const express = require('express');
 const app = express();
 const { courses, login, signupInstructorApplication, signupStudentApplication } = require('./src/routes/generalRoutes');
@@ -22,7 +38,8 @@ const {
 	enrolledCourses,
 	completedCourses,
 	availableCourses,
-	applyForGraduation
+	applyForGraduation,
+	reviewCourse
 } = require('./src/routes/studentRoutes');
 const {
 	assignGrade,
@@ -55,6 +72,7 @@ app.get('/enrolledCourses', enrolledCourses);
 app.get('/completedCourses', completedCourses);
 app.get('/availableCourses', availableCourses);
 app.post('/dropCourse', dropCourse);
+app.post('/reviewCourse', reviewCourse);
 
 //Registrar Routes
 app.post('/reviewStudentApplication', reviewStudentApplication);

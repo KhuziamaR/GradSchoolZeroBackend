@@ -43,7 +43,9 @@ class DatabaseClient {
                email VARCHAR(64) NOT NULL,
                password VARCHAR(64),
                warnings INT NOT NULL,
-               suspended BOOLEAN NOT NULL
+               suspended BOOLEAN NOT NULL,
+               rating FLOAT NOT NULL,
+               numberOfReviews INT NOT NULL
            );
 
            CREATE TABLE IF NOT EXISTS registrar (
@@ -69,7 +71,7 @@ class DatabaseClient {
                studentid CHAR(36) NOT NULL,
                courseid CHAR(36) NOT NULL,
                grade VARCHAR(2),
-               season VARCHAR(8) NOT NULL,
+               season VARCHAR(6) NOT NULL,
                year INT NOT NULL,
                PRIMARY KEY (studentid, courseid)
            );
@@ -109,6 +111,15 @@ class DatabaseClient {
                id CHAR(36) NOT NULL PRIMARY KEY,
                courseid CHAR(36) NOT NULL,
                studentid CHAR(36) NOT NULL
+           );
+
+           CREATE TABLE IF NOT EXISTS reviews (
+                reviewerid CHAR(36) NOT NULL,
+                reviewerName VARCHAR(64) NOT NULL,
+                reviewerWrittenReview VARCHAR(256) NOT NULL,
+	            reviewerRating FLOAT NOT NULL,
+                courseid CHAR(36) NOT NULL,
+                instructorid CHAR(36) NOT NULL
            );
 
            CREATE TABLE IF NOT EXISTS semesterPeriod (

@@ -13,7 +13,11 @@ const transporter = createTransport({
 
 const reviewInstructorApplication = (req, res) => {
 	const { id, decision } = req.query;
-
+	if (!id || !decision) {
+		res.status(500).send({
+			msg: "please send id and decision, decicion '0' means accept"
+		});
+	}
 	if (decision == '0') {
 		const applicationQuery = `SELECT * FROM instructorApplication WHERE id = '${id}';  `;
 		req.db
@@ -53,7 +57,7 @@ const reviewInstructorApplication = (req, res) => {
 							suspended BOOLEAN NOT NULL
 							*/
 
-							const createInstructorQuery = `INSERT INTO instructor (id, firstName, lastName, email , password, warnings, suspended) VALUES ('${uuidv4()}', '${instructorApp.firstname}','${instructorApp.lastname}', '${instructorApp.email}','',0, ${false});`;
+							const createInstructorQuery = `INSERT INTO instructor (id, firstName, lastName, email , password, warnings, suspended, rating, numberOfReviews) VALUES ('${uuidv4()}', '${instructorApp.firstname}','${instructorApp.lastname}', '${instructorApp.email}','',0, ${false}, 0.0, 0);`;
 							req.db
 								.query(createInstructorQuery)
 								.then((result) => {

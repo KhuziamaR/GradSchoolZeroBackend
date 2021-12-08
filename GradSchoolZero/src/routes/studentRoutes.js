@@ -131,6 +131,7 @@ const dropCourse = (req, res) => {
 
 const enroll = (req, res) => {
 	const { courseid, studentid } = req.query;
+
 	// Check if they're already enrolled
 	// Check if they have 4 classes
 	// Check if any time conflicts exist
@@ -149,7 +150,7 @@ const enroll = (req, res) => {
 			// student enrolled already
 			console.log(data);
 			const course = data[0].rows[0];
-			const alreadyEnrolled = data[1].rowCount == 1;
+			const alreadyEnrolled = data[1].rowCount >= 1;
 			const enrolledClasses = data[2].rows;
 			const student = data[3].rows[0];
 			// Student is enrolled already
@@ -188,9 +189,20 @@ const enroll = (req, res) => {
 						});
 					}
 					const date = new Date();
+					/*
+					CREATE TABLE IF NOT EXISTS class (
+               studentid CHAR(36) NOT NULL,
+               courseid CHAR(36) NOT NULL,
+               grade VARCHAR(2),
+               season VARCHAR(8) NOT NULL,
+               year INT NOT NULL,
+               PRIMARY KEY (studentid, courseid)
+           );
+					*/
+
 					const addClassQuery = `INSERT INTO class (studentid, courseid, grade, season, year) VALUES ('${studentid}','${courseid}','','${getSeason()}',${date.getFullYear()});
-                                    UPDATE course SET studentCount = ${course.studentcount +
-										1} WHERE id = '${courseid}';`;
+                                    UPDATE course SET studentCount = studentCount +
+										1 WHERE id = '${courseid}';`;
 					req.db
 						.query(addClassQuery)
 						.then((_) => {
@@ -198,17 +210,17 @@ const enroll = (req, res) => {
 						})
 						.catch((error) => {
 							console.log('Error inserting class: ', error);
-							res.status(500).send({ msg: 'An Error Occurred' });
+							res.status(500).send({ msg: 'An Error Occurred 3' });
 						});
 				})
 				.catch((error) => {
 					console.log('Error getting students enrolled courses: ', error);
-					res.status(500).send({ msg: 'An Error Occurred' });
+					res.status(500).send({ msg: 'An Error Occurred 2' });
 				});
 		})
 		.catch((error) => {
 			console.log('Error with first request:', error);
-			res.status(500).send({ msg: 'An Error Occurred' });
+			res.status(500).send({ msg: 'An Error Occurred 1' });
 		});
 };
 
@@ -306,6 +318,70 @@ const applyForGraduation = (req, res) => {
 			});
 		});
 };
+/*
+         reviewerid CHAR(36) NOT NULL,
+                reviewerName VARCHAR(64) NOT NULL,
+                reviewerWrittenReview VARCHAR(256) NOT NULL,
+	            reviewerRating FLOAT NOT NULL,
+                courseid CHAR(36) NOT NULL,
+                instructorid CHAR(36) NOT NULL
+*/
+
+const reviewCourse = (req, res) => {
+	const { reviewerid, reviewerName, reviewerWrittenReview, reviewerRating, courseid, instructorid } = req.query;
+	if (!(reviewerid && reviewerName && reviewerWrittenReview && reviewerRating && courseid && instructorid)) {
+		res.status(500).send({
+			msg: 'Please send all inputs!',
+			inputsRequired: 'reviewerid, reviewerName, reviewerWrittenReview, reviewerRating, courseid , instructorid'
+		});
+	}
+	const createReviewQuery = `INSERT INTO reviews (reviewerid, reviewerName, reviewerWrittenReview,reviewerRating, courseid, instructorid) VALUES ('${reviewerid}', '${reviewerName}', '${reviewerWrittenReview}', ${reviewerRating},'${courseid}', '${instructorid}');`;
+	req.db
+		.query(createReviewQuery)
+		.then((result) => {
+			if (result.rowCount == 0) {
+				res.status(500).send({
+					msg: 'error while inserting into reviews'
+				});
+			}
+			console.log('INSERTED INTO REVIEWS', instructorid);
+			req.db
+				.query(`SELECT * FROM instructor WHERE id = '${instructorid}';`)
+				.then((instructorData) => {
+					let { rating, numberofreviews } = instructorData.rows[0];
+					numberofreviews += 1;
+					rating = (rating + reviewerRating) / numberofreviews;
+
+					const updateInstructorQuery = `UPDATE instructor SET rating = ${rating}, numberOfReviews = ${numberofreviews} WHERE id = '${instructorid}';`;
+
+					req.db
+						.query(updateInstructorQuery)
+						.then((_) => {
+							console.log('hi');
+							res.status(200).send({
+								msg: 'Succesfuly created review and updated instructor rating!'
+							});
+						})
+						.catch((error) => {
+							console.log(error);
+							res.status(404).send({
+								msg: 'Error while updating instructor rating :( '
+							});
+						});
+				})
+				.catch((error) => {
+					console.log(error);
+					res.status(404).send({
+						msg: 'error while retrieving instructor data :( '
+					});
+				});
+		})
+		.catch((error) => {
+			res.status(500).send({
+				msg: 'error while creating review'
+			});
+		});
+};
 
 module.exports = {
 	student,
@@ -315,5 +391,6 @@ module.exports = {
 	availableCourses,
 	students,
 	dropCourse,
-	applyForGraduation
+	applyForGraduation,
+	reviewCourse
 };
