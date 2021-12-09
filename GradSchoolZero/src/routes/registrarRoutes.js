@@ -265,14 +265,15 @@ const getGraduationApplications = (req, res) => {
 const reviewGraduationApplication = (req, res) => {
 	const { studentid, decision } = req.query;
 
-	if (!studentid) {
-		res.status(500).send({
+	if (!studentid || !decision) {
+		return res.status(500).send({
 			msg: 'Please send student id.'
 		});
 	}
 	if (decision == '0') {
 		req.db.query(`SELECT * FROM graduatedStudents WHERE studentid = '${studentid}';`).then((grads) => {
 			if (grads.rowCount > 0) {
+				console.log('Student has already graduated.')
 				res.status(500).send({
 					msg: 'Student has already graduated.'
 				});
@@ -305,9 +306,24 @@ const reviewGraduationApplication = (req, res) => {
 			}
 		});
 	} else {
-		res.status(200).send({
-			msg: 'Graduation application was denied.'
-		});
+		req.db.query(`DELETE FROM graduationapplication WHERE studentid = '${studentid}';`)
+		.then(data => {
+			if (data.rowCount > 0) {
+				return res.status(200).send({
+					msg: 'Graduation application was denied.'
+				});
+			} else {
+				return res.status(500).send({
+					msg: 'Something Went wrong'
+				});
+			}
+		})
+		.catch(err => {
+			console.log(err)
+			return res.status(500).send({
+				msg: 'Something Went wrong'
+			});
+		})
 	}
 };
 
