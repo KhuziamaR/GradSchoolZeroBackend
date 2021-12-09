@@ -320,6 +320,126 @@ Please look at the specifications for what happens when the registration period 
 Fire instructor
 
 */
+const setSemesterPeriod = (req, res) => {
+	const { period, studentid } = req.query;
+	if (!period) {
+		res.status(500).send({
+			msg:
+				'please send inputs period as 0 - class setup period 1 - course registration period 2 - class running period 3 - grading period'
+		});
+	}
+	/*
+	periods: 
+	0 - class setup period
+	1 - course registration period 
+	2 - class running period 
+	3 - grading period
+	*/
+	const periods = [ 'class setup period', 'course registration period', 'class running period', 'grading period' ];
+
+	const getStudentsQuery = `SELECT id FROM student; UPDATE semesterPeriod SET period = '${periods[
+		parseInt(period)
+	]}';`;
+
+	req.db
+		.query(getStudentsQuery)
+		.then((students) => {
+			console.log(students[0].rows);
+			students[0].rows.map((currentStudent) => {
+				var studentid = currentStudent.id;
+				console.log(studentid);
+				if (period == '0') {
+					console.log(
+						'CLASS SETUP PERIOD: The registrars set up classes, class time, course instructor and class size'
+					);
+				} else if (period == '1') {
+					console.log(
+						'COURSE REGISTRATION PERION: all matriculated students can register between 2-4 courses. Ensure no time conflicts are present and the class capacity is not exceeded, if class capacity is reached, make sure to place student in waitlist.'
+					);
+					const retriveClassesForStudentQuery = `SELECT courseid FROM class WHERE studentid = '${studentid}';`;
+					req.db
+						.query(retriveClassesForStudentQuery)
+						.then((classes) => {
+							if (classes.rowCount < 2 || classes.rowCount > 4) {
+								// var coursesString = '';
+								// classes.rows.map((x) => {
+								// 	coursesString += ` courseid = '${x.courseid}'   OR`;
+								// });
+								// coursesString = coursesString.slice(0, coursesString.length - 2);
+								// console.log(coursesString);
+								res.status(500).send({
+									msg: `WARNING, student is enrolled in ${classes.rowCount} classes`,
+									courses: classes.rows
+								});
+							} else {
+								console.log('classes between 2-4');
+								var coursesString = '';
+								classes.rows.map((x) => {
+									coursesString += ` id = '${x.courseid}' OR`;
+								});
+								coursesString = coursesString.slice(0, coursesString.length - 2);
+								console.log(coursesString);
+								const getCourseInfoQuery = `SELECT * FROM course WHERE ${coursesString};`;
+								req.db.query(getCourseInfoQuery).then((courseInfo) => {
+									const flagCourses = [];
+									courseInfo.rows.map((x) => {
+										if (x.studentcount > x.capacity) {
+											flagCourses.push(x.id);
+										}
+									});
+									// T INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
+									var insertWaitlistQuery = '';
+									if (flagCourses.length == 0) {
+										res.status(200).send({
+											msg: 'Congrats, there are no time conflictions or class size issues.'
+										});
+									} else if (flagCourses.length == 1) {
+										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}');`;
+									} else if (flagCourses.length == 2) {
+										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}');`;
+									} else if (flagCourses.length == 3) {
+										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}');`;
+									} else if (flagCourses.length == 4) {
+										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[3]}', '${studentid}');`;
+									}
+									if (flagCourses.length > 0) {
+										req.db
+											.query(insertWaitlistQuery)
+											.then((_) => {
+												console.log('successfulluy reviewed this studnets info!');
+											})
+											.catch((error) => {
+												console.log(error);
+												res.status(404).send({
+													msg: 'error while inserting waitlist'
+												});
+											});
+									}
+								});
+							}
+						})
+						.catch((error) => {
+							console.log('error while setting period to 1');
+						});
+				} else if (period == '2') {
+					console.log(
+						'CLASS RUNNING PERIOD: No students can register for courses. Students who have less than 2 courses will be warned. Courses with less than 5 students will be cancelled. If course is cancelled then those students recieve another chance to select other courses, if all of the instructors courses are cancelled, they will be suspended.'
+					);
+				} else if (period == '3') {
+					console.log('GRADING PERIOD: ');
+				}
+			});
+			res.status(200).send({
+				msg: 'done'
+			});
+		})
+		.catch((error) => {
+			console.log('an error occured', error);
+			res.status(404).send({
+				msg: 'error occured while retrieving students'
+			});
+		});
+};
 
 module.exports = {
 	reviewInstructorApplication,
@@ -328,5 +448,6 @@ module.exports = {
 	getStudentApplications,
 	getInstructorApplications,
 	getGraduationApplications,
-	reviewGraduationApplication
+	reviewGraduationApplication,
+	setSemesterPeriod
 };
