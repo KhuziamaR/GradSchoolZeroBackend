@@ -3,9 +3,9 @@ const { Client } = require('pg');
 class DatabaseClient {
 	constructor() {
 		this.dbclient = new Client({
-			user: process.env.USERNAME,
-			password: process.env.PASSWORD,
-			host: process.env.HOST,
+			user: 'postgres',
+			password: '5432',
+			host: 'localhost',
 			port: 5432,
 			database: 'gradschoolzerodb'
 		});
@@ -33,6 +33,7 @@ class DatabaseClient {
                email VARCHAR(64) NOT NULL,
                password VARCHAR(64),
                warnings INT NOT NULL,
+               suspended BOOLEAN NOT NULL,
 	           gpa FLOAT
            );
 
@@ -130,6 +131,20 @@ class DatabaseClient {
             INSERT INTO semesterPeriod (period) 
             SELECT 'pre-registration'
             WHERE NOT EXISTS (SELECT * FROM semesterPeriod);
+
+            CREATE TABLE IF NOT EXISTS reports (
+                id CHAR(36) NOT NULL PRIMARY KEY,
+                reporterName VARCHAR(64) NOT NULL,
+                reporterID CHAR(36) NOT NULL,
+                reporterType varchar(64) NOT NULL,
+                reportedName VARCHAR(64) NOT NULL,
+                reportedID CHAR(36) NOT NULL,
+                reportedType VARCHAR(64) NOT NULL,
+                writtenReport VARCHAR(256)
+            );
+            CREATE TABLE IF NOT EXISTS tabooWords (
+                taboo VARCHAR(256) NOT NULL UNIQUE
+            )
 
             `
 			)

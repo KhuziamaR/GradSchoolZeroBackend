@@ -345,7 +345,6 @@ const conflicts = (days1, starttime1, endtime1, days2, starttime2, endtime2) => 
 	);
 };
 
-
 module.exports = {
 	assignGrade,
 	getInstructor,

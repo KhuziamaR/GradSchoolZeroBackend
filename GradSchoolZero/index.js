@@ -1,7 +1,6 @@
 const { DatabaseClient } = require('./src/Database');
 const cli = new DatabaseClient();
 cli.connect();
-
 // const tables = [
 // 	'instructor',
 // 	'class',
@@ -20,7 +19,13 @@ cli.connect();
 
 const express = require('express');
 const app = express();
-const { courses, login, signupInstructorApplication, signupStudentApplication } = require('./src/routes/generalRoutes');
+const {
+	courses,
+	login,
+	signupInstructorApplication,
+	submitReport,
+	signupStudentApplication
+} = require('./src/routes/generalRoutes');
 const {
 	reviewInstructorApplication,
 	reviewStudentApplication,
@@ -29,7 +34,10 @@ const {
 	getInstructorApplications,
 	getGraduationApplications,
 	reviewGraduationApplication,
-	setSemesterPeriod
+	setSemesterPeriod,
+	reviewReport,
+	getReports,
+	addTabooWords
 } = require('./src/routes/registrarRoutes');
 const {
 	dropCourse,
@@ -65,7 +73,7 @@ app.get('/courses', courses);
 app.post('/login', login);
 app.post('/signupInstructorApplication', signupInstructorApplication);
 app.post('/signupStudentApplication', signupStudentApplication);
-
+app.post('/submitReport', submitReport);
 // Student Routes
 app.get('/student', student);
 app.get('/students', students);
@@ -88,6 +96,9 @@ app.get('/getGraduationApplications', getGraduationApplications);
 app.post('/reviewGraduationApplication', reviewGraduationApplication);
 app.post('/setSemesterPeriod', setSemesterPeriod);
 
+app.post('/reviewReport', reviewReport);
+app.get('/getReports', getReports);
+app.post('/addTabooWords', addTabooWords);
 //Instructor Routes
 app.post('/assignGrade', assignGrade);
 app.get('/getInstructor', getInstructor);
