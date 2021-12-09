@@ -137,7 +137,7 @@ const reviewStudentApplication = (req, res) => {
 								*/
 							//  `INSERT INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
 
-							const createStudentQuery = `INSERT INTO student (id, firstName, lastName, email, password, warnings, suspended, gpa) VALUES ('${uuidv4()}', '${studentApp.firstname}','${studentApp.lastname}', '${studentApp.email}','',0, false, 4.0);`;
+							const createStudentQuery = `INSERT INTO student (id, firstName, lastName, email, password, warnings, suspended,specialRegistration, gpa) VALUES ('${uuidv4()}', '${studentApp.firstname}','${studentApp.lastname}', '${studentApp.email}','',0, false, false,4.0);`;
 							console.log(createStudentQuery);
 							req.db
 								.query(createStudentQuery)
@@ -443,18 +443,17 @@ const setSemesterPeriod = (req, res) => {
 	req.db
 		.query(getStudentsQuery)
 		.then((students) => {
-			console.log(students[0].rows);
 			students[0].rows.map((currentStudent) => {
 				var studentid = currentStudent.id;
 				console.log(studentid);
 				if (period == '0') {
-					console.log(
-						'CLASS SETUP PERIOD: The registrars set up classes, class time, course instructor and class size'
-					);
+					// console.log(
+					// 	'CLASS SETUP PERIOD: The registrars set up classes, class time, course instructor and class size'
+					// );
 				} else if (period == '1') {
-					console.log(
-						'COURSE REGISTRATION PERION: all matriculated students can register between 2-4 courses. Ensure no time conflicts are present and the class capacity is not exceeded, if class capacity is reached, make sure to place student in waitlist.'
-					);
+					// console.log(
+					// 	'COURSE REGISTRATION PERION: all matriculated students can register between 2-4 courses. Ensure no time conflicts are present and the class capacity is not exceeded, if class capacity is reached, make sure to place student in waitlist.'
+					// );
 					const retriveClassesForStudentQuery = `SELECT courseid FROM class WHERE studentid = '${studentid}';`;
 					req.db
 						.query(retriveClassesForStudentQuery)
@@ -466,6 +465,26 @@ const setSemesterPeriod = (req, res) => {
 								// });
 								// coursesString = coursesString.slice(0, coursesString.length - 2);
 								// console.log(coursesString);
+								req.db
+									.query(
+										`UPDATE student SET warnings = warnings + 1 WHERE id = '${studentid}' RETURNING student.warnings;`
+									)
+									.then((data) => {
+										console.log(data.rows[0].warnings);
+										if (data.rows[0].warnings && data.rows[0].warnings >= 3) {
+											req.db
+												.query(
+													`UPDATE student SET warnings = 0, suspended = 1 WHERE id = ${studentid};`
+												)
+												.then(() => {
+													console.log('Student recieved too many warnings and was suspended');
+												})
+												.catch((error) => {
+													console.log('error');
+												});
+										}
+										//if(data.rows.warnings)
+									});
 								res.status(500).send({
 									msg: `WARNING, student is enrolled in ${classes.rowCount} classes`,
 									courses: classes.rows
@@ -478,49 +497,138 @@ const setSemesterPeriod = (req, res) => {
 								coursesString = coursesString.slice(0, coursesString.length - 2);
 								console.log(coursesString);
 								const getCourseInfoQuery = `SELECT * FROM course WHERE ${coursesString};`;
-								req.db.query(getCourseInfoQuery).then((courseInfo) => {
-									const flagCourses = [];
-									courseInfo.rows.map((x) => {
-										if (x.studentcount > x.capacity) {
-											flagCourses.push(x.id);
+								req.db
+									.query(getCourseInfoQuery)
+									.then((courseInfo) => {
+										const flagCourses = [];
+										courseInfo.rows.map((x) => {
+											if (x.studentcount > x.capacity) {
+												flagCourses.push(x.id);
+											}
+										});
+										// T INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
+										var insertWaitlistQuery = '';
+										if (flagCourses.length == 0) {
+											console.log('Student has no issues with course capacity.');
+										} else if (flagCourses.length == 1) {
+											insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}');`;
+										} else if (flagCourses.length == 2) {
+											insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}');`;
+										} else if (flagCourses.length == 3) {
+											insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}');`;
+										} else if (flagCourses.length == 4) {
+											insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[3]}', '${studentid}');`;
 										}
-									});
-									// T INTO studentApplication (id, firstName, lastName, email, gpa, program, graduationYear) VALUES ('${id}', '${firstName}','${lastName}', '${email}',${gpa}, '${program}',${graduationYear});`;
-									var insertWaitlistQuery = '';
-									if (flagCourses.length == 0) {
-										console.log('Student has no issues with course capacity.');
-									} else if (flagCourses.length == 1) {
-										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}');`;
-									} else if (flagCourses.length == 2) {
-										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}');`;
-									} else if (flagCourses.length == 3) {
-										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}');`;
-									} else if (flagCourses.length == 4) {
-										insertWaitlistQuery = `INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[0]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[1]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[2]}', '${studentid}'); INSERT INTO waitlist (id, courseid, studentid) VALUES ('${uuidv4()}', '${flagCourses[3]}', '${studentid}');`;
-									}
-									if (flagCourses.length > 0) {
-										req.db
-											.query(insertWaitlistQuery)
-											.then((_) => {
-												console.log('successfulluy reviewed this studnets info!');
-											})
-											.catch((error) => {
-												console.log(error);
-												res.status(404).send({
-													msg: 'error while inserting waitlist'
+										if (flagCourses.length > 0) {
+											req.db
+												.query(insertWaitlistQuery)
+												.then((_) => {
+													console.log('successfulluy reviewed this studnets info!');
+												})
+												.catch((error) => {
+													console.log(error);
+													res.status(404).send({
+														msg: 'error while inserting waitlist'
+													});
 												});
-											});
-									}
-								});
+										}
+									})
+									.catch((error) => {
+										console.log('error while setting period to 1');
+									});
 							}
 						})
 						.catch((error) => {
 							console.log('error while setting period to 1');
 						});
 				} else if (period == '2') {
-					console.log(
-						'CLASS RUNNING PERIOD: No students can register for courses. Students who have less than 2 courses will be warned. Courses with less than 5 students will be cancelled. If course is cancelled then those students recieve another chance to select other courses, if all of the instructors courses are cancelled, they will be suspended.'
-					);
+					// console.log(
+					// 	'CLASS RUNNING PERIOD: No students can register for courses. Students who have less than 2 courses will be warned. Courses with less than 5 students will be cancelled. If course is cancelled then those students recieve another chance to select other courses, if all of the instructors courses are cancelled, they will be suspended.'
+					// );
+					req.db
+						.query(`DELETE FROM course WHERE studentCount < 5 RETURNING course.id;`)
+						.then((deletedCourses) => {
+							if (deletedCourses.rowCount != 0) {
+								console.log('Successfully DELTETED COURSES');
+								console.log(deletedCourses.rows);
+								var DCstring = '';
+								deletedCourses.rows.map((deletedCourse) => {
+									DCstring += "'" + deletedCourse.id + "', ";
+								});
+								console.log(DCstring.slice(0, DCstring.length - 2));
+								req.db
+									.query(
+										`SELECT studentid FROM class WHERE courseid in (${DCstring.slice(
+											0,
+											DCstring.length - 2
+										)});
+										DELETE FROM class WHERE courseid in (${DCstring.slice(0, DCstring.length - 2)});
+										`
+									)
+									.then((studentIds) => {
+										var studentIdString = '';
+										studentIds[0].rows.map((id) => {
+											studentIdString += "'" + id.id + "', ";
+										});
+										studentIdString = studentIdString.slice(0, studentIdString.length - 2);
+										req.db
+											.query(
+												`UPDATE student SET specialRegistration = 1 WHERE id in (${studentIdString}); DELETE class WHERE studentid in (${studentIdString});`
+											)
+											.then((_) => {
+												req.db.query(`SELECT id FROM instructor;`).then((data) => {
+													data.rows.map((id) => {
+														req.db
+															.query(
+																`SELECT * FROM course WHERE instructorid = '${id.id}';`
+															)
+															.then((data2) => {
+																if (data2.rowCount == 0) {
+																	req.db
+																		.query(
+																			`UPDATE instructor SET suspended = 1, warnings = 0 WHERE id = '${id.id}';`
+																		)
+																		.then((_) => {
+																			req.db
+																				.query(
+																					`DELETE FROM course WHERE instructorid = '${id.id}';`
+																				)
+																				.then((success) => {
+																					res.status(200).send({
+																						msg:
+																							'Successfully deleted courses with suspended instructor'
+																					});
+																				})
+																				.catch((error) => {
+																					console.log(error);
+																				});
+																		})
+																		.catch((error) => {
+																			console.log(error);
+																		});
+																}
+															})
+															.catch((error) => {
+																console.log(error);
+															});
+													});
+												});
+												res.status(200).send({
+													msg:
+														'Successfully deleted courses and set special registration students'
+												});
+											})
+											.catch((error) => {
+												console.log(error);
+												res.status(404).send({
+													msg: 'error while updating special registation for students'
+												});
+											});
+									});
+
+								// select studentid FROM class where id in (courseids );
+							}
+						});
 				} else if (period == '3') {
 					console.log('GRADING PERIOD: ');
 				}

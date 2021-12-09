@@ -34,6 +34,7 @@ class DatabaseClient {
                password VARCHAR(64),
                warnings INT NOT NULL,
                suspended BOOLEAN NOT NULL,
+               specialRegistration BOOLEAN NOT NULL,
 	           gpa FLOAT
            );
 

@@ -16,7 +16,7 @@ cli.connect();
 // 	'semesterPeriod'
 // ];
 // cli.resetTables(tables);
-
+// cli.resetTables([ 'class' ]);
 const express = require('express');
 const app = express();
 const {
