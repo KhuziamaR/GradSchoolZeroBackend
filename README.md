@@ -28,14 +28,14 @@ node index.js OR npm start to execute program
 nodemon - To automatically restart servers
 
 # Authors
-Shun Hua Xie
-Khuziama Rehman
-John Jakobsen
+*Shun Hua Xie
+*Khuziama Rehman
+*John Jakobsen
 
 # Version History
 Final version
--Review bug
--Drop class bug
+*Review bug
+*Drop class bug
 
 # Acknowledgments
 Platform inspired to manage students, instructors, and visitors with an administrative registrar
