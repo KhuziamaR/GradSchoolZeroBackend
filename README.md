@@ -45,7 +45,9 @@ John Jakobsen
 # Version History
 
 Final version
+
 -Review bug
+
 -Drop class bug
 
 # Acknowledgments
